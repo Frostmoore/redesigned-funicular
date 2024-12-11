@@ -13,8 +13,8 @@ const Color COLORE_SECONDARIO = Color(0xff2b346b);
 const Color COLORE_TERZIARIO = Color(0xff2b346b);
 const Color BIANCO = Color(0xffffffff);
 const Color TRASPARENTE = Color(0x00ffffff);
-const String ID = '!ID_APP'; //!ID_APP
-const String TOKEN = '!TOKEN'; //!TOKEN
+const String ID = '6'; //!ID_APP
+const String TOKEN = 'GwAqon0pX'; //!TOKEN
 const String PATH = 'www.hybridandgogsv.it';
 const String ENDPOINT = '/res/api.php';
 const String ENDPOINT_REG = '/res/api/v1/reg.php';
@@ -60,19 +60,22 @@ Map<String, Uri> assiEasy = {
   'assiEasyLogoutUrl': urlAssiEasyLogout,
 };
 
-var assiSecret = '!ASSISECRET'; //!ASSISECRET
+var assiSecret = 'afb5a9b4916de9d2a371563d40be6f1a'; //!ASSISECRET
 
 //
 // CHIAMATE POLIZZE TTYCREO
 //
-var pathAgenziaTtyCreo = '!PATH_AGE_TTY'; //!PATH_AGE_TTY
-var ttyCreoPath = '!PATH_TTY'; //!PATH_TTY
-var ttyCreoEndpoint = '!ENDPOINT_AGE_TTY'; //!ENDPOINT_AGE_TTY
-var licenzaClienteId = '!LICENZA_CLID_TTY'; //!LICENZA_CLID_TTY
-var aziendaId = '!AZID_TTY'; //!AZID_TTY
-var agenziaId = '!AGID_TTY'; //!AGID_TTY
-var ttyCreoApiKey = '!API_TTY'; //!API_TTY
-var ttyCreoClientSecret = '!SECRET_TTY'; //!SECRET_TTY
+var pathAgenziaTtyCreo = 'uw.'; //!PATH_AGE_TTY
+var ttyCreoPath = 'ttycreo.it'; //!PATH_TTY
+var ttyCreoEndpoint = '/webservice/gsvhomeinsurance/polizze'; //!ENDPOINT_AGE_TTY
+var licenzaClienteId = '105329'; //!LICENZA_CLID_TTY
+var aziendaId = '10532902'; //!AZID_TTY
+var agenziaId = '05349'; //!AGID_TTY
+var ttyCreoApiKey =
+    'os34rtk0ywfyfwok6gn1j13omzh9tpx64si30d8kfhkku7jbl3ob46zd2cz5ypi1h2oo84c7o34xtn21fxvcsrf0r4pf8vqwip3p07ki4qj1g6cdtav0k3ll75bqym4d';
+var ttyCreoClientId = 'z83v7h2fae8v4l2y085wz6d53foubkr5tb4iwlhvt4tfjqcwlgivvtu22ez1ycwx'; //!API_TTY
+var ttyCreoClientSecret =
+    '16uclsjcrlrjrdkspweeovvc6ostq2qnm7pv4hqh58xikqity2yl6uf88g045xjhe83m2cdrtzv7h3jj7e2o7qkbi5ow0ks6q0861dkfgd1c3z0i5brq448ynl11hp7i'; //!SECRET_TTY
 
 var urlTtyCreoPolizze = Uri.https(
   pathAgenziaTtyCreo + ttyCreoPath,
