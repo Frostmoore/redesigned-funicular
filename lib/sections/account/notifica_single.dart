@@ -16,10 +16,11 @@ class NotificaSingle extends StatefulWidget {
 
 class _NotificaSingleState extends State<NotificaSingle> {
   Future<Map> _getNotifica() async {
-    print(widget.data);
-    print(widget.userId);
+    // print(widget.data);
+    // print(widget.userId);
     final getNotifica = await http.post(
-      Uri.parse('https://' + constants.PATH + constants.ENDPOINT_SINGLENOT),
+      // Uri.parse('https://' + constants.PATH + constants.ENDPOINT_SINGLENOT),
+      Uri.parse("https://${constants.PATH}${constants.ENDPOINT_SINGLENOT}"),
       body: {
         'id': widget.data,
         'user': widget.userId,
@@ -30,7 +31,8 @@ class _NotificaSingleState extends State<NotificaSingle> {
 
   Future<Map> _markAsRead(id, user) async {
     final gigi = await http.post(
-      Uri.parse('https://' + constants.PATH + constants.ENDPOINT_READNOTI),
+      // Uri.parse('https://' + constants.PATH + constants.ENDPOINT_READNOTI),
+      Uri.parse("https://${constants.PATH}${constants.ENDPOINT_READNOTI}"),
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -112,10 +114,10 @@ class _NotificaSingleState extends State<NotificaSingle> {
                               Uri.parse(notificaClean['link']),
                             );
                           },
+                          style: constants.STILE_BOTTONE,
                           child: Text(
                             notificaClean['testolink'],
                           ),
-                          style: constants.STILE_BOTTONE,
                         ),
                         constants.SPACER_MEDIUM,
                       ],
