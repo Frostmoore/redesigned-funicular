@@ -22,6 +22,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 //import 'package:notification_permissions/notification_permissions.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -38,40 +39,18 @@ Future<void> _messageHandler(RemoteMessage message) async {
 //test
 
 void main() async {
-  //WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = new MyHttpOverrides(); // Remove in Production
+  OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
+  OneSignal.initialize(constants.APPID);
   await Firebase.initializeApp(
     name: constants.TITLE,
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  // await Permission.notification.isDenied.then((value) {
-  //   if (value) {
-  //     Permission.notification.request();
-  //     Permission.location.request();
-  //     //print(Permission.notification.status);
-  //   }
-  // });
-  // print(Permission.location.status);
-  /*await Permission.location.isDenied.then((value) {
-    if (value) {
-      Permission.location.request();
-      print(Permission.notification.status);
-    }
-  });*/
   Map<Permission, PermissionStatus> statuses = await [
     Permission.locationWhenInUse,
     Permission.notification,
   ].request();
-  print(statuses[Permission.location]);
-  // print(statuses[Permission.notification]);
-  //var gigi = await Permission.camera.status;
-  /*if (await Permission.photos.status == PermissionStatus.denied) {
-    Permission.photos.request();
-  }
-  if (await Permission.camera.status == PermissionStatus.denied) {
-    Permission.camera.request();
-  }*/
 
   FirebaseMessaging.onBackgroundMessage(_messageHandler);
 

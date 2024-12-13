@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 // PRINCIPALI
 //
 const String TITLE = '!NOME_APP';
+const String APPID = '!APP_ID';
 const Color COLORE_PRINCIPALE = Color(0xffdf842c);
 const Color COLORE_SECONDARIO = Color(0xff2b346b);
 const Color COLORE_TERZIARIO = Color(0xff2b346b);
