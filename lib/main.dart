@@ -42,7 +42,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = new MyHttpOverrides(); // Remove in Production
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
-  OneSignal.initialize(constants.APPID);
+  OneSignal.initialize(constants.APPID); // OneSignal Initialization
   await Firebase.initializeApp(
     name: constants.TITLE,
     options: DefaultFirebaseOptions.currentPlatform,
