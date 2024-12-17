@@ -48,3 +48,4 @@ app.*.map.json
 lib/firebase_options.dart
 lib/assets/constants_old.dart
 lib/assets/constants.dart
+upload-keystore.jks
