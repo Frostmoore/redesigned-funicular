@@ -692,7 +692,7 @@ class _RegisterFormState extends State<RegisterForm> {
       'email': _email.text,
       'cf': _codiceFiscale.text,
       'datadinascita': _dataDiNascita,
-      'codagenzia': _codAgenzia.text,
+      'codagenzia': _codAgenzia.text, // Remove in production
       'privacy1': _isChecked1,
       'privacy2': _isChecked2,
       'privacy3': _isChecked3,
