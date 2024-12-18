@@ -248,25 +248,25 @@ class _RegisterFormState extends State<RegisterForm> {
                           return null;
                         }),
                     constants.SPACER_MEDIUM,
-                    TextFormField(
-                        onSaved: (value) {
-                          CodAgenzia = value;
-                        },
-                        decoration: const InputDecoration(
-                          labelText: "Codice Agenzia",
-                          labelStyle: TextStyle(color: Colors.black87, fontSize: 17, fontFamily: 'AvenirLight'),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.purple),
-                          ),
-                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey, width: 1.0)),
-                        ),
-                        controller: _codAgenzia,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Per proseguire, compila questo campo.';
-                          }
-                          return null;
-                        }),
+                    // TextFormField(
+                    //     onSaved: (value) {
+                    //       CodAgenzia = value;
+                    //     },
+                    //     decoration: const InputDecoration(
+                    //       labelText: "Codice Agenzia",
+                    //       labelStyle: TextStyle(color: Colors.black87, fontSize: 17, fontFamily: 'AvenirLight'),
+                    //       focusedBorder: UnderlineInputBorder(
+                    //         borderSide: BorderSide(color: Colors.purple),
+                    //       ),
+                    //       enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey, width: 1.0)),
+                    //     ),
+                    //     controller: _codAgenzia,
+                    //     validator: (value) {
+                    //       if (value == null || value.isEmpty) {
+                    //         return 'Per proseguire, compila questo campo.';
+                    //       }
+                    //       return null;
+                    //     }),
                     TextFormField(
                       controller: TextEditingController(text: _dataDiNascita?.toString().substring(0, 10) ?? 'Non Selezionata'),
                       validator: (value) {
@@ -692,7 +692,7 @@ class _RegisterFormState extends State<RegisterForm> {
       'email': _email.text,
       'cf': _codiceFiscale.text,
       'datadinascita': _dataDiNascita,
-      'codagenzia': _codAgenzia.text, // Remove in production
+      // 'codagenzia': _codAgenzia.text, // Remove in production
       'privacy1': _isChecked1,
       'privacy2': _isChecked2,
       'privacy3': _isChecked3,
