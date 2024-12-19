@@ -41,8 +41,8 @@ Future<void> _messageHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = new MyHttpOverrides(); // Remove in Production
-  OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
-  OneSignal.initialize(constants.APPID); // OneSignal Initialization
+  // OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
+  // OneSignal.initialize(constants.APPID); // OneSignal Initialization
   await Firebase.initializeApp(
     name: constants.TITLE,
     options: DefaultFirebaseOptions.currentPlatform,
@@ -118,6 +118,8 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasData) {
+            OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
+            OneSignal.initialize(constants.APPID); // OneSignal Initialization
             return Scaffold(
               appBar: AppBar(
                 backgroundColor: Theme.of(context).colorScheme.inversePrimary,
