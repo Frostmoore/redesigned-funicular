@@ -119,7 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasData) {
             OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
-            OneSignal.initialize(constants.APPID); // OneSignal Initialization
+            OneSignal.initialize(snapshot.data['codiceagenzia']); // OneSignal Initialization
             return Scaffold(
               appBar: AppBar(
                 backgroundColor: Theme.of(context).colorScheme.inversePrimary,
