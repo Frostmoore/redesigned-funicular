@@ -27,7 +27,9 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }
 
@@ -42,7 +44,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = new MyHttpOverrides(); // Remove in Production
   // OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
-  // OneSignal.initialize(constants.APPID); // OneSignal Initialization
+  OneSignal.initialize(constants.APPID); // OneSignal Initialization
   await Firebase.initializeApp(
     name: constants.TITLE,
     options: DefaultFirebaseOptions.currentPlatform,
@@ -118,8 +120,10 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasData) {
-            OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
-            OneSignal.initialize(snapshot.data['codiceagenzia']); // OneSignal Initialization
+            OneSignal.Debug.setLogLevel(
+                OSLogLevel.verbose); // Remove in Production
+            OneSignal.initialize(
+                snapshot.data['codiceagenzia']); // OneSignal Initialization
             return Scaffold(
               appBar: AppBar(
                 backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -154,7 +158,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 currentIndex: _selectedIndex,
                 selectedItemColor: constants.COLORE_PRINCIPALE,
                 unselectedItemColor: constants.COLORE_PRINCIPALE,
-                unselectedLabelStyle: const TextStyle(color: constants.COLORE_PRINCIPALE),
+                unselectedLabelStyle:
+                    const TextStyle(color: constants.COLORE_PRINCIPALE),
                 onTap: _onItemTapped,
               ),
             );
