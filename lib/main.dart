@@ -1,6 +1,8 @@
 import 'package:Assidim/assets/constants.dart' as constants;
 import 'package:Assidim/sections/account/gestione_consensi.dart';
 import 'package:Assidim/sections/account/show_notifiche.dart';
+import 'package:Assidim/pages/preventivo.dart';
+import 'package:Assidim/pages/sinistro.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'dart:io';
@@ -69,7 +71,11 @@ class MyApp extends StatelessWidget {
     // Return app
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      routes: {'/': (context) => const MyHomePage(title: constants.TITLE)},
+      routes: {
+        '/': (context) => const MyHomePage(title: constants.TITLE),
+        '/sinistro': (context) => SinistroForm(),
+        '/preventivo': (context) => PreventivoForm(),
+      },
       title: constants.TITLE,
       theme: ThemeData(
         colorScheme: const ColorScheme.highContrastLight(),

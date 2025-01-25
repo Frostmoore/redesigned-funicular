@@ -83,16 +83,25 @@ class _SinistroState extends State<Sinistro> {
                     SizedBox(
                       width: width,
                       child: ElevatedButton.icon(
-                        onPressed: () => constants.openUrl(url_denuncia),
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/sinistro',
+                            arguments: widget.data,
+                          );
+                        },
                         label: const Text(constants.SINISTRO_TESTO_BOTTONE),
                         style: ButtonStyle(
-                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          shape:
+                              MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(5),
                             ),
                           ),
-                          backgroundColor: MaterialStateProperty.all<Color>(colore_terziario),
-                          foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              colore_terziario),
+                          foregroundColor:
+                              MaterialStateProperty.all<Color>(Colors.white),
                         ),
                         icon: const Icon(Icons.web),
                       ),
