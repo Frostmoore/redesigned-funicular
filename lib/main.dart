@@ -44,7 +44,7 @@ Future<void> _messageHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  HttpOverrides.global = new MyHttpOverrides(); // Remove in Production
+  // HttpOverrides.global = new MyHttpOverrides(); // Remove in Production
   // OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
   OneSignal.initialize(constants.APPID); // OneSignal Initialization
   await Firebase.initializeApp(
