@@ -87,7 +87,7 @@ class _IndirizzoState extends State<Indirizzo> {
               ),
             ),
             backgroundColor: MaterialStateProperty.all<Color>(
-              constants.COLORE_SECONDARIO,
+              Colors.black12,
             ),
             foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
           ),

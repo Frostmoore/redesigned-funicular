@@ -130,6 +130,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 OSLogLevel.verbose); // Remove in Production
             OneSignal.initialize(
                 snapshot.data['codiceagenzia']); // OneSignal Initialization
+            var colori = snapshot.data['colori'].split('|');
+            var colore_principale = int.parse(colori[0]);
+            var colore_secondario = int.parse(colori[1]);
             return Scaffold(
               appBar: AppBar(
                 backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -162,10 +165,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ],
                 currentIndex: _selectedIndex,
-                selectedItemColor: constants.COLORE_PRINCIPALE,
-                unselectedItemColor: constants.COLORE_PRINCIPALE,
+                selectedItemColor: Color(colore_secondario),
+                unselectedItemColor: Color(colore_secondario),
                 unselectedLabelStyle:
-                    const TextStyle(color: constants.COLORE_PRINCIPALE),
+                    TextStyle(color: Color(colore_secondario)),
                 onTap: _onItemTapped,
               ),
             );
@@ -184,7 +187,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             child: const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation(constants.COLORE_PRINCIPALE),
+                valueColor: AlwaysStoppedAnimation(Colors.teal),
               ),
             ),
           );
