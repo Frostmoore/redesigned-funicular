@@ -39,12 +39,32 @@ class _AccountPolizzeState extends State<AccountPolizze> {
 
     var headersAeLogin = {
       'chiave-hi': constants.chiaveHi,
-      'Host': constants.assiEasyPath,
-      'assi_secret': constants.assiSecret,
+      'Host': data['assiurl'] as String,
+      'assi_secret': data['assisecret'] as String,
     };
 
+    var urlAssieasyLookup = Uri.https(
+      data['assiurl'],
+      'assieasy/clienti/autenticazione/get_credenziali_utente',
+    );
+
+    var urlAssieasyLogin = Uri.https(
+      data['assiurl'],
+      '/assieasy/clienti/autenticazione/login',
+    );
+
+    var urlAssieasyPolizze = Uri.https(
+      data['assiurl'],
+      '/assieasy/clienti/polizze/get',
+    );
+
+    var urlAssieasyLogout = Uri.https(
+      data['assiurl'],
+      '/assieasy/clienti/autenticazione/logout',
+    );
+
     var lookupAe = await http.post(
-      constants.urlAssiEasyLookup,
+      urlAssieasyLookup,
       headers: headersAeLogin,
       body: lookupRequestAe,
     );
@@ -90,13 +110,11 @@ class _AccountPolizzeState extends State<AccountPolizze> {
       'token': tokenAe,
     };
     var polizzeAe = await http.post(
-      constants.urlAssiEasyPolizze,
+      urlAssieasyPolizze,
       headers: headersAePolizze,
       body: polizzeRequestAe,
     );
     var polizzeAeParsed = jsonDecode(polizzeAe.body) as Map;
-    // inspect(polizzeAe);
-    // print(polizzeAeParsed);
     return polizzeAeParsed;
 
     // TTY CREO
@@ -175,14 +193,18 @@ class _AccountPolizzeState extends State<AccountPolizze> {
                                 child: DecoratedBox(
                                   decoration: BoxDecoration(
                                     image: DecorationImage(
-                                      image: AssetImage('lib/assets/polizze_immagine.png'),
+                                      image: AssetImage(
+                                          'lib/assets/polizze_immagine.png'),
                                       fit: BoxFit.contain,
                                     ),
                                   ),
                                   child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
+                                    padding:
+                                        const EdgeInsets.fromLTRB(8, 18, 8, 8),
                                     child: Text(
-                                      "Polizza n. " + snapshot.data['data'][i]['NUMERO_POLIZZA'],
+                                      "Polizza n. " +
+                                          snapshot.data['data'][i]
+                                              ['NUMERO_POLIZZA'],
                                       textAlign: TextAlign.start,
                                       style: TextStyle(
                                         fontSize: 15,
