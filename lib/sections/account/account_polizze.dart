@@ -25,7 +25,7 @@ class _AccountPolizzeState extends State<AccountPolizze> {
 
     // AssiEasy Data
     // inspect(user);
-    var usernameAe = user['userData']['data']['result']['email'];
+    var usernameAe = user['userData']['data']['result']['username'];
     // var passwordAe = user['userData']['data']['result']['password'];
     var codiceFiscaleTty = user['userData']['data']['result']['cf'];
     //var usernameAe = 'giovannimoncelsi@gmail.com';
