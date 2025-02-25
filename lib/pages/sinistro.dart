@@ -151,7 +151,7 @@ class _SinistroFormState extends State<SinistroForm> {
   }
 
   void pickImage(ImageSource source, String key) async {
-    final pickedFile = await _picker.pickImage(source: source);
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
     setState(() {
       if (key == 'fotoCAI') {
         fotoCAI = pickedFile;
