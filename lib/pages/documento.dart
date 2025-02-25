@@ -68,12 +68,21 @@ class _DocumentoFormState extends State<DocumentoForm> {
   }
 
   Future<void> _pickDocument() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'png', 'doc', 'docx', 'xls', 'xlsx']);
-    if (result != null) {
+    // FilePickerResult? result = await FilePicker.platform.pickFiles(
+    //     type: FileType.custom,
+    //     allowedExtensions: ['pdf', 'jpg', 'png', 'doc', 'docx', 'xls', 'xlsx']);
+    // if (result != null) {
+    //   setState(() {
+    //     documentazione = XFile(result.files.single.path!);
+    //     uploadStatus['documentazione'] = true;
+    //   });
+    // }
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
       setState(() {
-        documentazione = XFile(result.files.single.path!);
+        documentazione = image;
         uploadStatus['documentazione'] = true;
       });
     }
