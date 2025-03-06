@@ -131,7 +131,8 @@ class _MyHomePageState extends State<MyHomePage> {
             OneSignal.Debug.setLogLevel(
                 OSLogLevel.verbose); // Remove in Production
             OneSignal.initialize(
-                snapshot.data['codiceagenzia']); // OneSignal Initialization
+                snapshot.data['os_app_id']); // OneSignal Initialization
+            // OneSignal.Notifications.requestPermission(true);
             var colori = snapshot.data['colori'].split('|');
             var colore_principale = int.parse(colori[0]);
             var colore_secondario = int.parse(colori[1]);
