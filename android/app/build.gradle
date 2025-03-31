@@ -33,7 +33,7 @@ def keystoreProperties = new Properties()
 }
 
 android {
-    namespace = "com.example.assieuropa"
+    namespace = "com.gsv.assieuropa"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
