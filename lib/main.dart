@@ -176,10 +176,21 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             );
           } else {
-            return Center(
-              child: Text(
-                'Non è stato possibile contattare il server di destinazione. Controlla la tua connessione o Riprova più tardi.',
-                textAlign: TextAlign.center,
+            return Scaffold(
+              appBar: AppBar(
+                backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                title: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Errore'),
+                  ],
+                ),
+              ),
+              body: Center(
+                child: Text(
+                  'Non è stato possibile contattare il server di destinazione. Controlla la tua connessione o Riprova più tardi.',
+                  textAlign: TextAlign.center,
+                ),
               ),
             );
           }
