@@ -23,7 +23,8 @@ class _ContattiState extends State<Contatti> {
     var numeriUtiliColori = widget.data['numeri_utili_colori'].split('|');
     // Numeri Utili
     var numeriUtiliSalute = widget.data['numeri_utili_salute'].split('|');
-    var numeriUtiliAssistenza = widget.data['numeri_utili_assistenza'].split('|');
+    var numeriUtiliAssistenza =
+        widget.data['numeri_utili_assistenza'].split('|');
     var numeriUtiliNoleggio = widget.data['numeri_utili_noleggio'].split('|');
 
     return Accordion(
@@ -93,18 +94,22 @@ class _ContattiState extends State<Contatti> {
                                 Expanded(
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
-                                      color: Color(int.parse(numeriUtiliColori[0])),
-                                      borderRadius: const BorderRadius.all(Radius.circular(5)),
+                                      color: Color(
+                                          int.parse(numeriUtiliColori[0])),
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(5)),
                                     ),
                                     child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 0, vertical: 8),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          const Icon(
-                                            Icons.monitor_heart,
-                                            color: Colors.white,
-                                          ),
+                                          // const Icon(
+                                          //   Icons.monitor_heart,
+                                          //   color: Colors.white,
+                                          // ),
                                           Text(
                                             numeriUtiliLabels[0],
                                             style: const TextStyle(
@@ -120,12 +125,15 @@ class _ContattiState extends State<Contatti> {
                             ),
                             content: Column(
                               children: [
-                                for (var i = 0; i < numeriUtiliSalute.length; i++)
+                                for (var i = 0;
+                                    i < numeriUtiliSalute.length;
+                                    i++)
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: ElevatedButton.icon(
                                       onPressed: () => constants.openUrl(
-                                        Uri.parse('tel:' + numeriUtiliSalute[i].split('.')[1]),
+                                        Uri.parse('tel:' +
+                                            numeriUtiliSalute[i].split('.')[1]),
                                       ),
                                       icon: const Icon(
                                         Icons.phone,
@@ -134,17 +142,22 @@ class _ContattiState extends State<Contatti> {
                                         numeriUtiliSalute[i].split('.')[0],
                                       ),
                                       style: ButtonStyle(
-                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        shape: MaterialStateProperty.all<
+                                            RoundedRectangleBorder>(
                                           RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(5),
+                                            borderRadius:
+                                                BorderRadius.circular(5),
                                           ),
                                         ),
-                                        backgroundColor: MaterialStateProperty.all<Color>(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
                                           Color(
                                             int.parse(numeriUtiliColori[0]),
                                           ),
                                         ),
-                                        foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                                        foregroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                Colors.white),
                                       ),
                                     ),
                                   ),
@@ -176,18 +189,22 @@ class _ContattiState extends State<Contatti> {
                                 Expanded(
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
-                                      color: Color(int.parse(numeriUtiliColori[1])),
-                                      borderRadius: const BorderRadius.all(Radius.circular(5)),
+                                      color: Color(
+                                          int.parse(numeriUtiliColori[1])),
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(5)),
                                     ),
                                     child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 0, vertical: 8),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          const Icon(
-                                            Icons.car_repair,
-                                            color: Colors.white,
-                                          ),
+                                          // const Icon(
+                                          //   Icons.car_repair,
+                                          //   color: Colors.white,
+                                          // ),
                                           Text(
                                             numeriUtiliLabels[1],
                                             style: const TextStyle(
@@ -203,12 +220,16 @@ class _ContattiState extends State<Contatti> {
                             ),
                             content: Column(
                               children: [
-                                for (var k = 0; k < numeriUtiliAssistenza.length; k++)
+                                for (var k = 0;
+                                    k < numeriUtiliAssistenza.length;
+                                    k++)
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: ElevatedButton.icon(
                                       onPressed: () => constants.openUrl(
-                                        Uri.parse('tel:' + numeriUtiliAssistenza[k].split('.')[1]),
+                                        Uri.parse('tel:' +
+                                            numeriUtiliAssistenza[k]
+                                                .split('.')[1]),
                                       ),
                                       icon: const Icon(
                                         Icons.phone,
@@ -217,17 +238,22 @@ class _ContattiState extends State<Contatti> {
                                         numeriUtiliAssistenza[k].split('.')[0],
                                       ),
                                       style: ButtonStyle(
-                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        shape: MaterialStateProperty.all<
+                                            RoundedRectangleBorder>(
                                           RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(5),
+                                            borderRadius:
+                                                BorderRadius.circular(5),
                                           ),
                                         ),
-                                        backgroundColor: MaterialStateProperty.all<Color>(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
                                           Color(
                                             int.parse(numeriUtiliColori[1]),
                                           ),
                                         ),
-                                        foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                                        foregroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                Colors.white),
                                       ),
                                     ),
                                   ),
@@ -259,18 +285,22 @@ class _ContattiState extends State<Contatti> {
                                 Expanded(
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
-                                      color: Color(int.parse(numeriUtiliColori[2])),
-                                      borderRadius: const BorderRadius.all(Radius.circular(5)),
+                                      color: Color(
+                                          int.parse(numeriUtiliColori[2])),
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(5)),
                                     ),
                                     child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 0, vertical: 8),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          const Icon(
-                                            Icons.car_rental,
-                                            color: Colors.white,
-                                          ),
+                                          // const Icon(
+                                          //   Icons.car_rental,
+                                          //   color: Colors.white,
+                                          // ),
                                           Text(
                                             numeriUtiliLabels[2],
                                             style: const TextStyle(
@@ -286,12 +316,16 @@ class _ContattiState extends State<Contatti> {
                             ),
                             content: Column(
                               children: [
-                                for (var l = 0; l < numeriUtiliNoleggio.length; l++)
+                                for (var l = 0;
+                                    l < numeriUtiliNoleggio.length;
+                                    l++)
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: ElevatedButton.icon(
                                       onPressed: () => constants.openUrl(
-                                        Uri.parse('tel:' + numeriUtiliNoleggio[l].split('.')[1]),
+                                        Uri.parse('tel:' +
+                                            numeriUtiliNoleggio[l]
+                                                .split('.')[1]),
                                       ),
                                       icon: const Icon(
                                         Icons.phone,
@@ -300,17 +334,22 @@ class _ContattiState extends State<Contatti> {
                                         numeriUtiliNoleggio[l].split('.')[0],
                                       ),
                                       style: ButtonStyle(
-                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        shape: MaterialStateProperty.all<
+                                            RoundedRectangleBorder>(
                                           RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(5),
+                                            borderRadius:
+                                                BorderRadius.circular(5),
                                           ),
                                         ),
-                                        backgroundColor: MaterialStateProperty.all<Color>(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
                                           Color(
                                             int.parse(numeriUtiliColori[2]),
                                           ),
                                         ),
-                                        foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                                        foregroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                Colors.white),
                                       ),
                                     ),
                                   ),
@@ -341,18 +380,22 @@ class _ContattiState extends State<Contatti> {
                               Expanded(
                                 child: DecoratedBox(
                                   decoration: BoxDecoration(
-                                    color: Color(int.parse(numeriUtiliColori[2])),
-                                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                                    color:
+                                        Color(int.parse(numeriUtiliColori[2])),
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(5)),
                                   ),
                                   child: const Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 0, vertical: 8),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Icon(
-                                          Icons.push_pin,
-                                          color: Colors.white,
-                                        ),
+                                        // Icon(
+                                        //   Icons.push_pin,
+                                        //   color: Colors.white,
+                                        // ),
                                         Text(
                                           'Dove mi Trovo',
                                           style: TextStyle(
@@ -368,11 +411,11 @@ class _ContattiState extends State<Contatti> {
                           ),
                           content: Column(
                             children: [
-                              for (var l = 0; l < numeriUtiliNoleggio.length; l++)
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Indirizzo(),
-                                ),
+                              // for (var l = 0; l < numeriUtiliNoleggio.length; l++)
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Indirizzo(),
+                              ),
                             ],
                           ),
                         ),
