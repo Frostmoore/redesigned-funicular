@@ -8,6 +8,8 @@
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
 		<string>assidim</string>
+		<key>NSCameraUsageDescription</key>
+		<string>Questa app utilizza la fotocamera per scattare foto.</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
