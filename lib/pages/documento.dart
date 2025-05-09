@@ -57,6 +57,39 @@ class _DocumentoFormState extends State<DocumentoForm> {
     return responseBody;
   }
 
+  void scegliFonteECarica(String key) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: Icon(Icons.camera_alt),
+                title: Text('Scatta con Fotocamera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  pickImage(ImageSource.camera, key);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('Scegli dalla Galleria'),
+                onTap: () {
+                  Navigator.pop(context);
+                  pickImage(ImageSource.gallery, key);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void pickImage(ImageSource source, String key) async {
     final pickedFile = await _picker.pickImage(source: source);
     setState(() {
@@ -65,27 +98,6 @@ class _DocumentoFormState extends State<DocumentoForm> {
       }
       uploadStatus[key] = pickedFile != null;
     });
-  }
-
-  Future<void> _pickDocument() async {
-    // FilePickerResult? result = await FilePicker.platform.pickFiles(
-    //     type: FileType.custom,
-    //     allowedExtensions: ['pdf', 'jpg', 'png', 'doc', 'docx', 'xls', 'xlsx']);
-    // if (result != null) {
-    //   setState(() {
-    //     documentazione = XFile(result.files.single.path!);
-    //     uploadStatus['documentazione'] = true;
-    //   });
-    // }
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.camera);
-
-    if (image != null) {
-      setState(() {
-        documentazione = image;
-        uploadStatus['documentazione'] = true;
-      });
-    }
   }
 
   Future<void> submitForm() async {
@@ -269,7 +281,7 @@ class _DocumentoFormState extends State<DocumentoForm> {
               ),
             ),
             ElevatedButton(
-              onPressed: _pickDocument,
+              onPressed: () => scegliFonteECarica('documentazione'),
               child: Text(documentazione == null
                   ? 'Carica Documentazione'
                   : 'File Caricato'),

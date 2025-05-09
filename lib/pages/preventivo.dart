@@ -58,8 +58,41 @@ class _PreventivoFormState extends State<PreventivoForm> {
     return responseBody;
   }
 
+  void scegliFonteECarica(String key) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: Icon(Icons.camera_alt),
+                title: Text('Scatta con Fotocamera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  pickImage(ImageSource.camera, key);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('Scegli dalla Galleria'),
+                onTap: () {
+                  Navigator.pop(context);
+                  pickImage(ImageSource.gallery, key);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void pickImage(ImageSource source, String key) async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    final pickedFile = await _picker.pickImage(source: source);
     setState(() {
       if (key == 'fronteDoc') {
         fronteDoc = pickedFile;
@@ -141,7 +174,9 @@ class _PreventivoFormState extends State<PreventivoForm> {
           Navigator.of(context).pop();
         } else {
           // Handle error
-          // print('Error: ${response.statusCode}');
+          print('Error: ${response.statusCode}');
+          final responseData = await response.stream.bytesToString();
+          print('Error: ${responseData}');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Errore nell\'invio dei dati!')),
           );
@@ -251,7 +286,7 @@ class _PreventivoFormState extends State<PreventivoForm> {
             TextFormField(
               controller: descrizione1Controller,
               decoration:
-                  InputDecoration(labelText: 'Descrizione del Sinistro'),
+                  InputDecoration(labelText: 'Descrizione della Richiesta'),
               maxLines: 8,
               validator: (value) =>
                   value!.isEmpty ? 'Campo obbligatorio' : null,
@@ -272,7 +307,7 @@ class _PreventivoFormState extends State<PreventivoForm> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => pickImage(ImageSource.gallery, 'documentazione'),
+              onPressed: () => scegliFonteECarica('documentazione'),
               style: constants.STILE_BOTTONE,
               child: Column(
                 children: [
@@ -283,7 +318,7 @@ class _PreventivoFormState extends State<PreventivoForm> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => pickImage(ImageSource.gallery, 'fronteDoc'),
+              onPressed: () => scegliFonteECarica('fronteDoc'),
               style: constants.STILE_BOTTONE,
               child: Column(
                 children: [
@@ -294,7 +329,7 @@ class _PreventivoFormState extends State<PreventivoForm> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => pickImage(ImageSource.gallery, 'retroDoc'),
+              onPressed: () => scegliFonteECarica('retroDoc'),
               style: constants.STILE_BOTTONE,
               child: Column(
                 children: [

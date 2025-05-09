@@ -150,8 +150,41 @@ class _SinistroFormState extends State<SinistroForm> {
     return responseBody;
   }
 
+  void scegliFonteECarica(String key) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: Icon(Icons.camera_alt),
+                title: Text('Scatta con Fotocamera'),
+                onTap: () {
+                  Navigator.pop(context);
+                  pickImage(ImageSource.camera, key);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('Scegli dalla Galleria'),
+                onTap: () {
+                  Navigator.pop(context);
+                  pickImage(ImageSource.gallery, key);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void pickImage(ImageSource source, String key) async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    final pickedFile = await _picker.pickImage(source: source);
     setState(() {
       if (key == 'fotoCAI') {
         fotoCAI = pickedFile;
@@ -603,7 +636,7 @@ class _SinistroFormState extends State<SinistroForm> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => pickImage(ImageSource.gallery, 'fotoCAI'),
+              onPressed: () => scegliFonteECarica('fotoCAI'),
               style: constants.STILE_BOTTONE,
               child: Column(
                 children: [
@@ -614,7 +647,7 @@ class _SinistroFormState extends State<SinistroForm> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => pickImage(ImageSource.gallery, 'fronteDoc'),
+              onPressed: () => scegliFonteECarica('fronteDoc'),
               style: constants.STILE_BOTTONE,
               child: Column(
                 children: [
@@ -625,7 +658,7 @@ class _SinistroFormState extends State<SinistroForm> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => pickImage(ImageSource.gallery, 'retroDoc'),
+              onPressed: () => scegliFonteECarica('retroDoc'),
               style: constants.STILE_BOTTONE,
               child: Column(
                 children: [
@@ -1328,7 +1361,7 @@ class _SinistroFormState extends State<SinistroForm> {
             ),
           ),
           ElevatedButton(
-            onPressed: () => pickImage(ImageSource.gallery, 'fronteDoc'),
+            onPressed: () => scegliFonteECarica('fronteDoc'),
             style: constants.STILE_BOTTONE,
             child: Column(
               children: [
@@ -1339,7 +1372,7 @@ class _SinistroFormState extends State<SinistroForm> {
             ),
           ),
           ElevatedButton(
-            onPressed: () => pickImage(ImageSource.gallery, 'retroDoc'),
+            onPressed: () => scegliFonteECarica('retroDoc'),
             style: constants.STILE_BOTTONE,
             child: Column(
               children: [
@@ -1432,7 +1465,7 @@ class _SinistroFormState extends State<SinistroForm> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => pickImage(ImageSource.gallery, 'documentazione'),
+              onPressed: () => scegliFonteECarica('documentazione'),
               style: constants.STILE_BOTTONE,
               child: Column(
                 children: [
@@ -1443,7 +1476,7 @@ class _SinistroFormState extends State<SinistroForm> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => pickImage(ImageSource.gallery, 'fronteDoc'),
+              onPressed: () => scegliFonteECarica('fronteDoc'),
               style: constants.STILE_BOTTONE,
               child: Column(
                 children: [
@@ -1454,7 +1487,7 @@ class _SinistroFormState extends State<SinistroForm> {
               ),
             ),
             ElevatedButton(
-              onPressed: () => pickImage(ImageSource.gallery, 'retroDoc'),
+              onPressed: () => scegliFonteECarica('retroDoc'),
               style: constants.STILE_BOTTONE,
               child: Column(
                 children: [
