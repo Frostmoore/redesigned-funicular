@@ -9,7 +9,7 @@
 		<key>CFBundleDisplayName</key>
 		<string>assidim</string>
 		<key>NSCameraUsageDescription</key>
-		<string>Questa app utilizza la fotocamera per scattare foto.</string>
+		<string>Questa app utilizza la fotocamera per permetterti di caricare i tuoi documenti o le tue immagini scattando loro una foto. Le immagini che caricherai saranno usate esclusivamente per la gestione della tua richiesta e non verranno mai comunicate all'esterno.</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
