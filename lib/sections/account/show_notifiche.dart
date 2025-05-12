@@ -37,8 +37,12 @@ class _ShowNotificheState extends State<ShowNotifiche> {
     // print(datiNotifiche);
     List pippo = [];
     for (var i = 0; i < datiNotifiche.length; i++) {
-      var destinatari = datiNotifiche[i]['destinatari'] == null ? '' : datiNotifiche[i]['destinatari'].split(',');
-      var lettada = datiNotifiche[i]['letta_da'] == null ? '' : datiNotifiche[i]['letta_da'].split(',');
+      var destinatari = datiNotifiche[i]['destinatari'] == null
+          ? ''
+          : datiNotifiche[i]['destinatari'].split(',');
+      var lettada = datiNotifiche[i]['letta_da'] == null
+          ? ''
+          : datiNotifiche[i]['letta_da'].split(',');
       var n = datiNotifiche[i];
       if (destinatari.contains(user)) {
         if (!lettada.contains(user)) {
@@ -100,95 +104,115 @@ class _ShowNotificheState extends State<ShowNotifiche> {
                 // print(notificheClean);
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < notificheClean.length; i++)
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                width: 0.3,
-                                color: Colors.grey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < notificheClean.length; i++)
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  width: 0.3,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
-                          ),
-                          child: SingleChildScrollView(
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => NotificaSingle(
-                                      data: notificheClean[i]['id'],
-                                      userId: user,
+                            child: SingleChildScrollView(
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => NotificaSingle(
+                                        data: notificheClean[i]['id'],
+                                        userId: user,
+                                      ),
                                     ),
-                                  ),
-                                ).then((value) => setState(() {}));
-                              },
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        Icon(
-                                          notificheClean[i]['letta_da'] == false ? Icons.mail : Icons.mark_email_read,
-                                          color:
-                                              notificheClean[i]['letta_da'] == true ? Colors.grey : constants.COLORE_PRINCIPALE,
-                                          size: 35,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(15.0, 8, 8, 8),
-                                    child: SizedBox(
-                                      width: MediaQuery.of(context).size.width - 90,
+                                  ).then((value) => setState(() {}));
+                                },
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.fromLTRB(0, 8, 0, 0),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            notificheClean[i]['dataora'],
-                                            textAlign: TextAlign.start,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontStyle: FontStyle.italic,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          Text(
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                            notificheClean[i]['titolo'],
-                                            textAlign: TextAlign.start,
-                                            style: TextStyle(
-                                              fontWeight:
-                                                  notificheClean[i]['letta_da'] == false ? FontWeight.bold : FontWeight.normal,
-                                              fontSize: 20,
-                                            ),
-                                          ),
-                                          Text(
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 2,
-                                            notificheClean[i]['contenuto'],
-                                            textAlign: TextAlign.justify,
-                                            style: TextStyle(
-                                              fontWeight:
-                                                  notificheClean[i]['letta_da'] == false ? FontWeight.bold : FontWeight.normal,
-                                            ),
+                                          Icon(
+                                            notificheClean[i]['letta_da'] ==
+                                                    false
+                                                ? Icons.mail
+                                                : Icons.mark_email_read,
+                                            color: notificheClean[i]
+                                                        ['letta_da'] ==
+                                                    true
+                                                ? Colors.grey
+                                                : constants.COLORE_PRINCIPALE,
+                                            size: 35,
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                ],
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          15.0, 8, 8, 8),
+                                      child: SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width -
+                                                90,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              notificheClean[i]['dataora'],
+                                              textAlign: TextAlign.start,
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontStyle: FontStyle.italic,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Text(
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                              notificheClean[i]['titolo'],
+                                              textAlign: TextAlign.start,
+                                              style: TextStyle(
+                                                fontWeight: notificheClean[i]
+                                                            ['letta_da'] ==
+                                                        false
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
+                                                fontSize: 20,
+                                              ),
+                                            ),
+                                            Text(
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 2,
+                                              notificheClean[i]['contenuto'],
+                                              textAlign: TextAlign.justify,
+                                              style: TextStyle(
+                                                fontWeight: notificheClean[i]
+                                                            ['letta_da'] ==
+                                                        false
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               } else {
