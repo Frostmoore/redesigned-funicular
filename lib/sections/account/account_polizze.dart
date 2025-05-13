@@ -25,9 +25,10 @@ class _AccountPolizzeState extends State<AccountPolizze> {
 
     // AssiEasy Data
     // inspect(user);
-    var usernameAe = user['userData']['data']['result']['username'];
-    // var passwordAe = user['userData']['data']['result']['password'];
+    var usernameAe = user['userData']['data']['result']['email'];
     var codiceFiscaleTty = user['userData']['data']['result']['cf'];
+    //var usernameAe = 'a.catino@catinoassicurazioni.it';
+    //var codiceFiscaleTty = 'CTNNTN56R11E839D';
     //var usernameAe = 'giovannimoncelsi@gmail.com';
     //var passwordAe = 'test';
 
@@ -82,7 +83,7 @@ class _AccountPolizzeState extends State<AccountPolizze> {
     // print(headersAeLogin);
     // print(loginRequestAe);
     var loginAe = await http.post(
-      constants.urlAssiEasyLogin,
+      urlAssieasyLogin,
       headers: headersAeLogin,
       body: loginRequestAe,
     );
@@ -98,15 +99,16 @@ class _AccountPolizzeState extends State<AccountPolizze> {
       'sorts[1][column]': 'NUMERO_POLIZZA',
       'sorts[1][order]': 'DESC',
     };
+    String host = data['assiurl'];
+    String secret = data['assisecret'];
     var headersAePolizze = {
       'chiave-hi': constants.chiaveHi,
       'Accept': '*/*',
       'Cache-Control': 'no-cache',
-      'Host': 'assidim.assieasy.com',
+      'Host': host,
       'Accept-Encoding': 'gzip, deflate, br',
       'Connection': 'keep-alive',
-      'assi_secret': constants.assiSecret,
-      'assi_secret_ics': 'a0ceef94baee08287e267b4f4037b681',
+      'assi_secret': secret,
       'token': tokenAe,
     };
     var polizzeAe = await http.post(
