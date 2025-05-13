@@ -47,7 +47,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // HttpOverrides.global = new MyHttpOverrides(); // Remove in Production
   // OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
-  OneSignal.initialize(constants.APPID); // OneSignal Initialization
+  // OneSignal.initialize(constants.APPID); // OneSignal Initialization
   await Firebase.initializeApp(
     name: constants.TITLE,
     options: DefaultFirebaseOptions.currentPlatform,
@@ -128,8 +128,8 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasData) {
-            OneSignal.Debug.setLogLevel(
-                OSLogLevel.verbose); // Remove in Production
+            // OneSignal.Debug.setLogLevel(
+            //     OSLogLevel.verbose); // Remove in Production
             OneSignal.initialize(
                 snapshot.data['os_app_id']); // OneSignal Initialization
             // OneSignal.Notifications.requestPermission(true);
