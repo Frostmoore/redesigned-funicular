@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:Assidim/assets/constants.dart' as constants;
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:Assidim/sections/liberatoria.dart';
+import 'dart:math';
 // import 'dart:developer';
 
 class RegisterForm extends StatefulWidget {
@@ -247,25 +248,25 @@ class _RegisterFormState extends State<RegisterForm> {
                           return null;
                         }),
                     constants.SPACER_MEDIUM,
-                    TextFormField(
-                        onSaved: (value) {
-                          CodAgenzia = value;
-                        },
-                        decoration: const InputDecoration(
-                          labelText: "Codice Agenzia",
-                          labelStyle: TextStyle(color: Colors.black87, fontSize: 17, fontFamily: 'AvenirLight'),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Colors.purple),
-                          ),
-                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey, width: 1.0)),
-                        ),
-                        controller: _codAgenzia,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Per proseguire, compila questo campo.';
-                          }
-                          return null;
-                        }),
+                    // TextFormField(
+                    //     onSaved: (value) {
+                    //       CodAgenzia = value;
+                    //     },
+                    //     decoration: const InputDecoration(
+                    //       labelText: "Codice Agenzia",
+                    //       labelStyle: TextStyle(color: Colors.black87, fontSize: 17, fontFamily: 'AvenirLight'),
+                    //       focusedBorder: UnderlineInputBorder(
+                    //         borderSide: BorderSide(color: Colors.purple),
+                    //       ),
+                    //       enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey, width: 1.0)),
+                    //     ),
+                    //     controller: _codAgenzia,
+                    //     validator: (value) {
+                    //       if (value == null || value.isEmpty) {
+                    //         return 'Per proseguire, compila questo campo.';
+                    //       }
+                    //       return null;
+                    //     }),
                     TextFormField(
                       controller: TextEditingController(text: _dataDiNascita?.toString().substring(0, 10) ?? 'Non Selezionata'),
                       validator: (value) {
@@ -664,11 +665,23 @@ class _RegisterFormState extends State<RegisterForm> {
     }
   }
 
+  String randomNumbers(int _length) {
+    final Random random = Random();
+    int length = _length;
+    String randomString = '';
+
+    for (int i = 0; i < length; i++) {
+      randomString += random.nextInt(10).toString(); // Genera un numero tra 0 e 9
+    }
+    return randomString;
+  }
+
   Future<void> _sendData(BuildContext context) async {
     var url = Uri.https(
       constants.PATH,
       constants.ENDPOINT_REG,
     );
+    var playerId = "${_username.text}_${randomNumbers(5)}";
     var request = {
       'id': constants.ID,
       'token': constants.TOKEN,
@@ -679,11 +692,13 @@ class _RegisterFormState extends State<RegisterForm> {
       'email': _email.text,
       'cf': _codiceFiscale.text,
       'datadinascita': _dataDiNascita,
-      'codagenzia': _codAgenzia.text,
+      // 'codagenzia': _codAgenzia.text, // Remove in production
       'privacy1': _isChecked1,
       'privacy2': _isChecked2,
       'privacy3': _isChecked3,
       'privacy4': _isChecked4,
+      'playerid': playerId,
+      // ADD PLAYERID ALSO TO SERVER
     };
     final response = await http.post(
       url,

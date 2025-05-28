@@ -24,6 +24,7 @@ import 'package:Assidim/assets/constants.dart' as constants;
 // import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 class AccountPage extends StatefulWidget {
   final data;
@@ -95,6 +96,7 @@ class _AccountPageState extends State<AccountPage> {
       var userStatus = responseParsed['http_response_code'];
       if (userStatus == '1') {
         // print(responseParsed['http_response_code']);
+        OneSignal.login(responseParsed['playerid']);
         return {'result': 'ok', 'data': responseParsed, 'userStatus': 1};
       } else {
         constants.userStatus = userStatus;

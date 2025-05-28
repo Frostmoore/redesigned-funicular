@@ -47,4 +47,9 @@ app.*.map.json
 /ios/Runner/GoogleService-Info.plist
 lib/firebase_options.dart
 lib/assets/constants_old.dart
+<<<<<<< HEAD
 /android/key.properties
+=======
+lib/assets/constants.dart
+upload-keystore.jks
+>>>>>>> dev

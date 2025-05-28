@@ -22,7 +22,7 @@ class _LoginFallitoState extends State<LoginFallito> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const HtmlWidget(
-              "<h2 style='text-align:center;font-weight:bold;'>ATTENZIONE!</h2><p style='text-align:center;'>Non siamo riusciti a farti accedere. Riprova più tardi, contatta la tua agenzia o, se credi di aver dimenticato la password, clicca sul link seguente per reimpostarla.</p>"),
+              "<h2 style='text-align:center;font-weight:bold;'>ATTENZIONE!</h2><p style='text-align:center;'>Non siamo riusciti a farti accedere. Assicurati di aver attivato il tuo account tramite il link inviato per mail (Controlla anche la casella di posta indesiderata). <br />Riprova più tardi, contatta la tua agenzia o, se credi di aver dimenticato la password, clicca sul link seguente per reimpostarla.</p>"),
           InkWell(
             onTap: () {
               constants.userStatus = 99;

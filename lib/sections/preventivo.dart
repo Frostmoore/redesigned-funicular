@@ -83,16 +83,25 @@ class _PreventivoState extends State<Preventivo> {
                     SizedBox(
                       width: width,
                       child: ElevatedButton.icon(
-                        onPressed: () => constants.openUrl(url_preventivo),
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/preventivo',
+                            arguments: widget.data,
+                          );
+                        },
                         label: const Text('Vai al Modulo'),
                         style: ButtonStyle(
-                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          shape:
+                              MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(5),
                             ),
                           ),
-                          backgroundColor: MaterialStateProperty.all<Color>(colore_terziario),
-                          foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              colore_terziario),
+                          foregroundColor:
+                              MaterialStateProperty.all<Color>(Colors.white),
                         ),
                         icon: const Icon(Icons.web),
                       ),

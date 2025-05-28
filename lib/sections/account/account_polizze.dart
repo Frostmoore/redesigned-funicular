@@ -24,12 +24,8 @@ class _AccountPolizzeState extends State<AccountPolizze> {
     var user = widget.userData;
 
     // AssiEasy Data
-    // inspect(user);
-    var usernameAe = user['userData']['data']['result']['email'];
-    // var passwordAe = user['userData']['data']['result']['password'];
+    var usernameAe = user['userData']['data']['result']['username'];
     var codiceFiscaleTty = user['userData']['data']['result']['cf'];
-    //var usernameAe = 'giovannimoncelsi@gmail.com';
-    //var passwordAe = 'test';
 
     // AssiEasy Request Lookup
     var lookupRequestAe = {
@@ -39,12 +35,32 @@ class _AccountPolizzeState extends State<AccountPolizze> {
 
     var headersAeLogin = {
       'chiave-hi': constants.chiaveHi,
-      'Host': constants.assiEasyPath,
-      'assi_secret': constants.assiSecret,
+      'Host': data['assiurl'] as String,
+      'assi_secret': data['assisecret'] as String,
     };
 
+    var urlAssieasyLookup = Uri.https(
+      data['assiurl'],
+      'assieasy/clienti/autenticazione/get_credenziali_utente',
+    );
+
+    var urlAssieasyLogin = Uri.https(
+      data['assiurl'],
+      '/assieasy/clienti/autenticazione/login',
+    );
+
+    var urlAssieasyPolizze = Uri.https(
+      data['assiurl'],
+      '/assieasy/clienti/polizze/get',
+    );
+
+    var urlAssieasyLogout = Uri.https(
+      data['assiurl'],
+      '/assieasy/clienti/autenticazione/logout',
+    );
+
     var lookupAe = await http.post(
-      constants.urlAssiEasyLookup,
+      urlAssieasyLookup,
       headers: headersAeLogin,
       body: lookupRequestAe,
     );
@@ -62,7 +78,7 @@ class _AccountPolizzeState extends State<AccountPolizze> {
     // print(headersAeLogin);
     // print(loginRequestAe);
     var loginAe = await http.post(
-      constants.urlAssiEasyLogin,
+      urlAssieasyLogin,
       headers: headersAeLogin,
       body: loginRequestAe,
     );
@@ -78,25 +94,24 @@ class _AccountPolizzeState extends State<AccountPolizze> {
       'sorts[1][column]': 'NUMERO_POLIZZA',
       'sorts[1][order]': 'DESC',
     };
+    String host = data['assiurl'];
+    String secret = data['assisecret'];
     var headersAePolizze = {
       'chiave-hi': constants.chiaveHi,
       'Accept': '*/*',
       'Cache-Control': 'no-cache',
-      'Host': 'assidim.assieasy.com',
+      'Host': host,
       'Accept-Encoding': 'gzip, deflate, br',
       'Connection': 'keep-alive',
-      'assi_secret': constants.assiSecret,
-      'assi_secret_ics': 'a0ceef94baee08287e267b4f4037b681',
+      'assi_secret': secret,
       'token': tokenAe,
     };
     var polizzeAe = await http.post(
-      constants.urlAssiEasyPolizze,
+      urlAssieasyPolizze,
       headers: headersAePolizze,
       body: polizzeRequestAe,
     );
     var polizzeAeParsed = jsonDecode(polizzeAe.body) as Map;
-    // inspect(polizzeAe);
-    // print(polizzeAeParsed);
     return polizzeAeParsed;
 
     // TTY CREO
@@ -116,7 +131,6 @@ class _AccountPolizzeState extends State<AccountPolizze> {
     };
 
     var headersTty = {
-      'X-Sintesi-ClientId': constants.ttyCreoClientId,
       'X-Sintesi-ClientSecret': constants.ttyCreoClientSecret,
       'X-Sintesi-Apikey': constants.ttyCreoApiKey + getHashOfNow(),
     };
@@ -129,8 +143,6 @@ class _AccountPolizzeState extends State<AccountPolizze> {
     );
 
     var polizzeTtyParsed = jsonDecode(responseTty.body) as Map;
-    // inspect(polizzeTtyParsed);
-    // return polizzeTtyParsed;
   }
 
   @override
@@ -140,12 +152,7 @@ class _AccountPolizzeState extends State<AccountPolizze> {
       future: _polizze,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          // inspect(snapshot);
-          // inspect(snapshot.error);
-          // print(snapshot.data);
           if (snapshot.hasData) {
-            // print(snapshot.data['data'][0]['ID_POLIZZA']);
-            // print(snapshot.data['totalCount']);
             return Column(
               children: [
                 for (var i = 0; i < snapshot.data['totalCount']; i++)
@@ -175,14 +182,18 @@ class _AccountPolizzeState extends State<AccountPolizze> {
                                 child: DecoratedBox(
                                   decoration: BoxDecoration(
                                     image: DecorationImage(
-                                      image: AssetImage('lib/assets/polizze_immagine.png'),
+                                      image: AssetImage(
+                                          'lib/assets/polizze_immagine.png'),
                                       fit: BoxFit.contain,
                                     ),
                                   ),
                                   child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
+                                    padding:
+                                        const EdgeInsets.fromLTRB(8, 18, 8, 8),
                                     child: Text(
-                                      "Polizza n. " + snapshot.data['data'][i]['NUMERO_POLIZZA'],
+                                      "Polizza n. " +
+                                          snapshot.data['data'][i]
+                                              ['NUMERO_POLIZZA'],
                                       textAlign: TextAlign.start,
                                       style: TextStyle(
                                         fontSize: 15,
@@ -213,25 +224,6 @@ class _AccountPolizzeState extends State<AccountPolizze> {
                         ),
                       ],
                     ),
-                    // child: Container(
-                    //   decoration: BoxDecoration(
-                    //     border: Border.all(color: Colors.black45),
-                    //     borderRadius: const BorderRadius.all(Radius.circular(5)),
-                    //   ),
-                    //   child: Padding(
-                    //     padding: const EdgeInsets.all(16.0),
-                    //     child: Column(
-                    //       children: [
-                    //         Text("Compagnia: " + snapshot.data['data'][i]['DESC_COMPAGNIA']),
-                    //         Text("Numero Polizza: " + snapshot.data['data'][i]['ID_POLIZZA']),
-                    //         Text("Scadenza: " + snapshot.data['data'][i]['DATA_SCADENZA_CONTRATTO']),
-                    //         Text("Ramo: " + snapshot.data['data'][i]['DESC_RAMO']),
-                    //         Text("Frazionamento: " + snapshot.data['data'][i]['FRAZIONAMENTO']),
-                    //         Text("Premio: " + snapshot.data['data'][i]['PREMIO_NETTO']),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // ),
                   ),
               ],
             );
