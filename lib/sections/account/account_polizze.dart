@@ -24,13 +24,8 @@ class _AccountPolizzeState extends State<AccountPolizze> {
     var user = widget.userData;
 
     // AssiEasy Data
-    // inspect(user);
-    var usernameAe = user['userData']['data']['result']['email'];
+    var usernameAe = user['userData']['data']['result']['username'];
     var codiceFiscaleTty = user['userData']['data']['result']['cf'];
-    //var usernameAe = 'a.catino@catinoassicurazioni.it';
-    //var codiceFiscaleTty = 'CTNNTN56R11E839D';
-    //var usernameAe = 'giovannimoncelsi@gmail.com';
-    //var passwordAe = 'test';
 
     // AssiEasy Request Lookup
     var lookupRequestAe = {
@@ -136,7 +131,6 @@ class _AccountPolizzeState extends State<AccountPolizze> {
     };
 
     var headersTty = {
-      // 'X-Sintesi-ClientId': constants.ttyCreoClienteId,
       'X-Sintesi-ClientSecret': constants.ttyCreoClientSecret,
       'X-Sintesi-Apikey': constants.ttyCreoApiKey + getHashOfNow(),
     };
@@ -149,8 +143,6 @@ class _AccountPolizzeState extends State<AccountPolizze> {
     );
 
     var polizzeTtyParsed = jsonDecode(responseTty.body) as Map;
-    // inspect(polizzeTtyParsed);
-    // return polizzeTtyParsed;
   }
 
   @override
@@ -160,12 +152,7 @@ class _AccountPolizzeState extends State<AccountPolizze> {
       future: _polizze,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          // inspect(snapshot);
-          // inspect(snapshot.error);
-          // print(snapshot.data);
           if (snapshot.hasData) {
-            // print(snapshot.data['data'][0]['ID_POLIZZA']);
-            // print(snapshot.data['totalCount']);
             return Column(
               children: [
                 for (var i = 0; i < snapshot.data['totalCount']; i++)
@@ -237,25 +224,6 @@ class _AccountPolizzeState extends State<AccountPolizze> {
                         ),
                       ],
                     ),
-                    // child: Container(
-                    //   decoration: BoxDecoration(
-                    //     border: Border.all(color: Colors.black45),
-                    //     borderRadius: const BorderRadius.all(Radius.circular(5)),
-                    //   ),
-                    //   child: Padding(
-                    //     padding: const EdgeInsets.all(16.0),
-                    //     child: Column(
-                    //       children: [
-                    //         Text("Compagnia: " + snapshot.data['data'][i]['DESC_COMPAGNIA']),
-                    //         Text("Numero Polizza: " + snapshot.data['data'][i]['ID_POLIZZA']),
-                    //         Text("Scadenza: " + snapshot.data['data'][i]['DATA_SCADENZA_CONTRATTO']),
-                    //         Text("Ramo: " + snapshot.data['data'][i]['DESC_RAMO']),
-                    //         Text("Frazionamento: " + snapshot.data['data'][i]['FRAZIONAMENTO']),
-                    //         Text("Premio: " + snapshot.data['data'][i]['PREMIO_NETTO']),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // ),
                   ),
               ],
             );
