@@ -107,86 +107,62 @@ class _PreventivoFormState extends State<PreventivoForm> {
 
   Future<void> submitForm() async {
     if (_formKey.currentState!.validate()) {
-      if (uploadStatus['fronteDoc'] == true &&
-          uploadStatus['retroDoc'] == true) {
-        setState(() {
-          isLoading = true;
-        });
+      setState(() {
+        isLoading = true;
+      });
 
-        final requestData;
+      final requestData = {
+        'id': constants.ID,
+        'nome': nomeController.text,
+        'cognome': cognomeController.text,
+        'indirizzo': indirizzoController.text,
+        'email': emailController.text,
+        'telefono': telefonoController.text,
+        'privacy': privacy,
+        'descrizione': descrizione1Controller.text,
+      };
 
-        requestData = {
-          'id': constants.ID,
-          'nome': nomeController.text,
-          'cognome': cognomeController.text,
-          'indirizzo': indirizzoController.text,
-          'email': emailController.text,
-          'telefono': telefonoController.text,
-          'privacy': privacy,
-          'descrizione': descrizione1Controller.text,
-        };
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('https://www.hybridandgogsv.it/res/api/v1/preventivo.php'),
+      );
 
-        final request = http.MultipartRequest(
-          'POST',
-          Uri.parse('https://www.hybridandgogsv.it/res/api/v1/preventivo.php'),
-        );
+      request.fields['data'] = jsonEncode(requestData);
 
-        request.fields['data'] = jsonEncode(requestData);
+      if (fronteDoc != null) {
+        request.files.add(
+            await http.MultipartFile.fromPath('fronteDoc', fronteDoc!.path));
+      }
 
-        if (fronteDoc != null) {
-          request.files.add(
-              await http.MultipartFile.fromPath('fronteDoc', fronteDoc!.path));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Carica la foto del documento!')),
-          );
-        }
+      if (retroDoc != null) {
+        request.files
+            .add(await http.MultipartFile.fromPath('retroDoc', retroDoc!.path));
+      }
 
-        if (retroDoc != null) {
-          request.files.add(
-              await http.MultipartFile.fromPath('retroDoc', retroDoc!.path));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Carica la foto del documento!')),
-          );
-        }
+      if (documentazione != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+            'documentazione', documentazione!.path));
+      }
 
-        if (documentazione != null) {
-          request.files.add(await http.MultipartFile.fromPath(
-              'documentazione', documentazione!.path));
-        }
+      final response = await request.send();
 
-        final response = await request.send();
+      setState(() {
+        isLoading = false;
+      });
 
-        setState(() {
-          isLoading = false;
-        });
-
-        if (response.statusCode == 200) {
-          final responseData = await response.stream.bytesToString();
-          print(responseData);
-          final responseJson = jsonDecode(responseData);
-          // Handle success
-          // print('Success: $responseJson');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Dati inviati con successo!')),
-          );
-          Navigator.of(context).pop();
-        } else {
-          // Handle error
-          print('Error: ${response.statusCode}');
-          final responseData = await response.stream.bytesToString();
-          print('Error: ${responseData}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Errore nell\'invio dei dati!')),
-          );
-        }
-      } else {
+      if (response.statusCode == 200) {
+        final responseData = await response.stream.bytesToString();
+        final responseJson = jsonDecode(responseData);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Carica le foto dei documenti e accetta la Liberatoria Privacy!')),
+          SnackBar(content: Text('Dati inviati con successo!')),
         );
+        Navigator.of(context).pop();
+      } else {
+        final responseData = await response.stream.bytesToString();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Errore nell\'invio dei dati!')),
+        );
+        print('Errore HTTP ${response.statusCode}: $responseData');
       }
     }
   }
@@ -268,8 +244,6 @@ class _PreventivoFormState extends State<PreventivoForm> {
             TextFormField(
               controller: indirizzoController,
               decoration: InputDecoration(labelText: 'Indirizzo'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
             ),
             TextFormField(
               controller: emailController,

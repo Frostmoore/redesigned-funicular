@@ -26,7 +26,7 @@ class _InfoState extends State<Info> {
     return Column(
       children: [
         constants.SPACER,
-        if (widget.data['notifica_testo'] != '') Notifica(data: widget.data),
+        Notifica(),
         Accordion(
           headerBorderWidth: 1,
           headerBorderColor: Colors.transparent,

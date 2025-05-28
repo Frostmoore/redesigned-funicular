@@ -27,6 +27,8 @@ import 'package:flutter/services.dart';
 //import 'package:notification_permissions/notification_permissions.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 
+ValueNotifier<int> notificaAggiornaTrigger = ValueNotifier(0);
+
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
@@ -34,6 +36,13 @@ class MyHttpOverrides extends HttpOverrides {
       ..badCertificateCallback =
           (X509Certificate cert, String host, int port) => true;
   }
+}
+
+void setupOneSignalListener() {
+  OneSignal.Notifications.addForegroundWillDisplayListener((event) {
+    print("[OneSignal] Push ricevuta: aggiorno notifiche!");
+    notificaAggiornaTrigger.value++;
+  });
 }
 
 Future<void> _messageHandler(RemoteMessage message) async {
@@ -45,9 +54,9 @@ Future<void> _messageHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // HttpOverrides.global = new MyHttpOverrides(); // Remove in Production
+  HttpOverrides.global = new MyHttpOverrides(); // Remove in Production
   // OneSignal.Debug.setLogLevel(OSLogLevel.verbose); // Remove in Production
-  // OneSignal.initialize(constants.APPID); // OneSignal Initialization
+//   OneSignal.initialize(constants.APPID); // OneSignal Initialization
   await Firebase.initializeApp(
     name: constants.TITLE,
     options: DefaultFirebaseOptions.currentPlatform,
@@ -128,8 +137,8 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasData) {
-            // OneSignal.Debug.setLogLevel(
-            //     OSLogLevel.verbose); // Remove in Production
+            OneSignal.Debug.setLogLevel(
+                OSLogLevel.verbose); // Remove in Production
             OneSignal.initialize(
                 snapshot.data['os_app_id']); // OneSignal Initialization
             // OneSignal.Notifications.requestPermission(true);
@@ -176,21 +185,10 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             );
           } else {
-            return Scaffold(
-              appBar: AppBar(
-                backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-                title: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Errore'),
-                  ],
-                ),
-              ),
-              body: Center(
-                child: Text(
-                  'Non è stato possibile contattare il server di destinazione. Controlla la tua connessione o Riprova più tardi.',
-                  textAlign: TextAlign.center,
-                ),
+            return Center(
+              child: Text(
+                'Non è stato possibile contattare il server di destinazione. Controlla la tua connessione o Riprova più tardi.',
+                textAlign: TextAlign.center,
               ),
             );
           }
