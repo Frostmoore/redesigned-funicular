@@ -24,6 +24,13 @@ class _SinistroFormState extends State<SinistroForm> {
     _ageData = getData();
   }
 
+  Widget _backButton() => ElevatedButton.icon(
+        style: constants.STILE_BOTTONE,
+        onPressed: () => setState(() => selectedOption = null),
+        icon: const Icon(Icons.arrow_back),
+        label: const Text('Indietro'),
+      );
+
   // Controllers for Option 1 fields
   TextEditingController nomeController = TextEditingController();
   TextEditingController cognomeController = TextEditingController();
@@ -357,57 +364,6 @@ class _SinistroFormState extends State<SinistroForm> {
           };
         }
 
-        // final requestData = selectedOption == 1
-        //     ? {
-        //         'id': constants.ID,
-        //         'option': 1,
-        //         'nome': nomeController.text,
-        //         'cognome': cognomeController.text,
-        //         'indirizzo': indirizzoController.text,
-        //         'email': emailController.text,
-        //         'telefono': telefonoController.text,
-        //         'privacy': privacy,
-        //       }
-        //     : {
-        //         'id': constants.ID,
-        //         'option': 2,
-        //         'dataOraIncidente': dataOraIncidente?.toIso8601String(),
-        //         'luogoIncidente': luogoIncidenteController.text,
-        //         'feriti': feriti,
-        //         'contraente': {
-        //           'cognome': cognomeAController.text,
-        //           'nome': nomeAController.text,
-        //           'codiceFiscale': codiceFiscaleAController.text,
-        //           'indirizzo': indirizzoAController.text,
-        //           'cap': capAController.text,
-        //           'stato': statoAController.text,
-        //           'telefono': telefonoAController.text,
-        //           'email': emailAController.text,
-        //         },
-        //         'veicoloA': {
-        //           'marca': marcaVeicoloAController.text,
-        //           'targaTelaio': targaTelaioAController.text,
-        //           'statoImmatricolazione': statoImmatricolazioneController.text,
-        //         },
-        //         'conducente': {
-        //           'cognome': cognomeConducenteController.text,
-        //           'nome': nomeConducenteController.text,
-        //           'dataNascita': dataNascitaConducente?.toIso8601String(),
-        //           'codiceFiscale': codiceFiscaleConducenteController.text,
-        //           'indirizzo': indirizzoConducenteController.text,
-        //           'cap': capConducenteController.text,
-        //           'telefono': telefonoConducenteController.text,
-        //           'numeroPatente': numeroPatenteController.text,
-        //           'categoriaPatente': categoriaPatenteController.text,
-        //           'validitaPatente': validitaPatente?.toIso8601String(),
-        //         },
-        //         'veicoloB': {
-        //           'targaTelaio': targaTelaioBController.text,
-        //         },
-        //         'circostanze': circostanze,
-        //         'privacy': privacy,
-        //       };
-
         final request = http.MultipartRequest(
           'POST',
           Uri.parse('https://www.hybridandgogsv.it/res/api/v1/sinistro.php'),
@@ -479,79 +435,93 @@ class _SinistroFormState extends State<SinistroForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Modulo Sinistro')),
+      appBar: AppBar(title: const Text('Modulo Sinistro')),
       body: isLoading
           ? Center(
               child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                      constants.COLORE_PRINCIPALE)),
+                valueColor: AlwaysStoppedAnimation(constants.COLORE_PRINCIPALE),
+              ),
             )
           : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        DropdownButton<int>(
-                          value: selectedOption,
-                          hint: Text('Seleziona un\'opzione'),
-                          onChanged: (value) =>
-                              setState(() => selectedOption = value),
-                          items: [
-                            DropdownMenuItem(
-                                value: 1,
-                                child:
-                                    Text('Auto: Ho compilato il modulo CAI')),
-                            DropdownMenuItem(
-                                value: 2,
-                                child: Text(
-                                    'Auto: NON ho compilato il modulo CAI')),
-                            DropdownMenuItem(
-                                value: 3, child: Text('Sinistro NON Auto')),
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center, //  ◀️ centrato
+                  children: [
+                    // 3 bottoni iniziali
+                    if (selectedOption == null) // 👈 schermata iniziale
+                      SizedBox(
+                        // ⬅️ riempie lo schermo
+                        height: MediaQuery.of(context)
+                                .size
+                                .height // altezza intera finestra
+                            -
+                            kToolbarHeight // meno AppBar
+                            -
+                            32, // meno padding esterno
+                        width: MediaQuery.of(context).size.width,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment
+                              .center, // ↕️ centratura verticale
+                          crossAxisAlignment:
+                              CrossAxisAlignment.center, // ↔️ centratura orizz.
+                          children: [
+                            ElevatedButton(
+                              onPressed: () =>
+                                  setState(() => selectedOption = 1),
+                              style: constants.STILE_BOTTONE,
+                              child: const Text('Auto – ho il modulo CAI'),
+                            ),
+                            constants.SPACER,
+                            ElevatedButton(
+                              onPressed: () =>
+                                  setState(() => selectedOption = 2),
+                              style: constants.STILE_BOTTONE,
+                              child: const Text('Auto – NESSUN modulo CAI'),
+                            ),
+                            constants.SPACER,
+                            ElevatedButton(
+                              onPressed: () =>
+                                  setState(() => selectedOption = 3),
+                              style: constants.STILE_BOTTONE,
+                              child: const Text('Sinistro NON-Auto'),
+                            ),
                           ],
                         ),
-                        constants.SPACER,
-                        if (selectedOption == 1) _buildOption1Form(),
-                        if (selectedOption == 2) _buildOption2Form(),
-                        if (selectedOption == 3) _buildOption3Form(),
-                        if (selectedOption == 1 ||
-                            selectedOption == 2 ||
-                            selectedOption == 3)
-                          constants.SPACER,
-                        if (selectedOption == 1 ||
-                            selectedOption == 2 ||
-                            selectedOption == 3)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                    'Acconsento al trattamento dei miei dati personali, così come esposto nella liberatoria Privacy'),
-                              ),
-                              Checkbox(
-                                value: privacy,
-                                onChanged: (value) =>
-                                    setState(() => privacy = value!),
-                              ),
-                            ],
+                      ),
+
+                    // form + tasto indietro
+                    if (selectedOption != null) ...[
+                      Center(child: _backButton()), // ◀️ centrato
+                      constants.SPACER,
+                      if (selectedOption == 1) _buildOption1Form(),
+                      if (selectedOption == 2) _buildOption2Form(),
+                      if (selectedOption == 3) _buildOption3Form(),
+                      constants.SPACER,
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Acconsento al trattamento dei miei dati personali, '
+                              'così come esposto nella liberatoria Privacy',
+                            ),
                           ),
-                        if (selectedOption == 1 ||
-                            selectedOption == 2 ||
-                            selectedOption == 3)
-                          _liberatoria(),
-                        if (selectedOption == 1 ||
-                            selectedOption == 2 ||
-                            selectedOption == 3)
-                          ElevatedButton(
-                            onPressed: submitForm,
-                            style: constants.STILE_BOTTONE_ALT,
-                            child: Text('Invia il Modulo'),
+                          Checkbox(
+                            value: privacy,
+                            onChanged: (v) => setState(() => privacy = v!),
                           ),
-                        constants.SPACER,
-                      ],
-                    ),
-                  ),
+                        ],
+                      ),
+                      _liberatoria(),
+                      ElevatedButton(
+                        onPressed: submitForm,
+                        style: constants.STILE_BOTTONE_ALT,
+                        child: const Text('Invia il Modulo'),
+                      ),
+                      constants.SPACER,
+                    ],
+                  ],
                 ),
               ),
             ),

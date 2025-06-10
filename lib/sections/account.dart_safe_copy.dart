@@ -29,7 +29,11 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 class AccountPage extends StatefulWidget {
   final data;
   final Function() logParent;
-  const AccountPage({super.key, required this.data, required this.logParent});
+  const AccountPage({
+    super.key,
+    required this.data,
+    required this.logParent,
+  });
 
   @override
   State<AccountPage> createState() => _AccountPageState();
@@ -37,58 +41,42 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPageState extends State<AccountPage> {
   final LocalAuthentication auth = LocalAuthentication();
-  late SharedPreferences prefs;
-  final storage = FlutterSecureStorage();
-  late Future<Map> _getAuthentication;
-
-  @override
-  void initState() {
-    super.initState();
-    _getAuthentication = _initPrefsAndAuthenticate();
-  }
-
-  Future<Map> _initPrefsAndAuthenticate() async {
-    prefs = await SharedPreferences.getInstance();
-    return await authenticate();
-  }
 
   Future<bool> didAuthenticate() async {
-    if (!await auth.canCheckBiometrics) return false;
-
-    bool canAuthenticate =
-        await auth.isDeviceSupported() && await auth.canCheckBiometrics;
-
-    if (!canAuthenticate) {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: Text('Biometria non disponibile'),
-          content: Text(
-              'Sul tuo dispositivo non è configurata un\'autenticazione biometrica.'),
-          actions: [
-            TextButton(
-              child: Text('Ok'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
+    bool _canCheckBiometrics = await auth.canCheckBiometrics;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var storage = FlutterSecureStorage();
+    if (_canCheckBiometrics) {
+      final bool didAuthenticate = await auth.authenticate(
+        localizedReason:
+            'Accedi con i tuoi dati biometrici per semplificare il processo di login.',
+        options: const AuthenticationOptions(
+          biometricOnly: true,
         ),
       );
+      if (didAuthenticate) {
+        await prefs.setBool('isAlreadyLogged', true);
+        return true;
+      } else {
+        return false;
+      }
+    } else {
       return false;
     }
-
-    return await auth.authenticate(
-      localizedReason:
-          'Accedi con i tuoi dati biometrici per semplificare il processo di login.',
-      options: const AuthenticationOptions(biometricOnly: true),
-    );
   }
 
-  Future<Map> login() async {
+  login() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var storage = FlutterSecureStorage();
     if (await storage.containsKey(key: 'username')) {
       var username = await storage.read(key: 'username');
       var password = await storage.read(key: 'password');
+      // LOGIN
+      var url = Uri.https(
+        constants.PATH,
+        constants.ENDPOINT_LOG,
+      );
 
-      var url = Uri.https(constants.PATH, constants.ENDPOINT_LOG);
       var request = {
         'id': constants.ID,
         'token': constants.TOKEN,
@@ -103,36 +91,13 @@ class _AccountPageState extends State<AccountPage> {
       );
 
       var responseParsed = jsonDecode(response.body) as Map;
+      // inspect(response);
+      // print(response.statusCode);
+      // print(responseParsed['http_response_code']);
       var userStatus = responseParsed['http_response_code'];
-
       if (userStatus == '1') {
-        final externalUserId = responseParsed['playerid'];
-
-        try {
-          print('🔄 Login OneSignal con externalUserId: $externalUserId');
-          await OneSignal.login(externalUserId);
-          await Future.delayed(Duration(milliseconds: 500));
-
-          final sub = OneSignal.User.pushSubscription;
-          final token = sub.token;
-          final currentPlayerId = sub.id;
-          final optedIn = sub.optedIn;
-
-          if (token == null || currentPlayerId == null || optedIn == false) {
-            print(
-                '❌ OneSignal non attivo: token=$token, id=$currentPlayerId, optedIn=$optedIn');
-            print('🔁 Eseguo logout e nuovo login...');
-            await OneSignal.logout();
-            await Future.delayed(Duration(milliseconds: 500));
-            await OneSignal.login(externalUserId);
-          } else {
-            print(
-                '✅ OneSignal attivo: token=$token | playerId=$currentPlayerId | optedIn=$optedIn');
-          }
-        } catch (e) {
-          print('💥 Errore OneSignal: $e');
-        }
-
+        // print(responseParsed['http_response_code']);
+        OneSignal.login(responseParsed['playerid']);
         return {'result': 'ok', 'data': responseParsed, 'userStatus': 1};
       } else {
         constants.userStatus = userStatus;
@@ -140,29 +105,36 @@ class _AccountPageState extends State<AccountPage> {
         return {'result': 'error', 'data': responseParsed, 'userStatus': 100};
       }
     } else {
+      // constants.userStatus = 0;
+      // widget.logParent();
       return {'result': 'error', 'data': null, 'userStatus': 98};
     }
   }
 
   Future<Map> authenticate() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final storage = FlutterSecureStorage();
     if (prefs.containsKey('hasGivenPermissionToUseBiometrics')) {
       if (prefs.getBool('hasGivenPermissionToUseBiometrics') == true) {
         if (prefs.containsKey('alreadyLoggedInWithBiometrics')) {
+          // ASK FOR LOCAL AUTHENTICATION, NOT FOR PERMISSION
           if (await didAuthenticate()) {
             Map userData = await login();
             return {'result': 'ok', 'userData': userData};
           } else {
             Map userData = await login();
-            await storage.deleteAll();
+            storage.deleteAll();
             clearAll();
             return {'result': 'error', 'userData': userData};
           }
         } else {
           Map userData = await login();
           if (await didAuthenticate()) {
+            Map userData = await login();
             prefs.setBool('alreadyLoggedInWithBiometrics', true);
           } else {
-            await storage.deleteAll();
+            Map userData = await login();
+            storage.deleteAll();
             clearAll();
             return {'result': 'error', 'userData': userData};
           }
@@ -173,10 +145,13 @@ class _AccountPageState extends State<AccountPage> {
         }
       } else {
         Map userData = await login();
+        // storage.deleteAll();
+        // clearAll();
         return {'result': 'ok', 'userData': userData};
       }
     } else {
       Map userData = await login();
+      // ASK FOR PERMISSION
       showDialog(
         context: context,
         builder: (context) {
@@ -194,13 +169,17 @@ class _AccountPageState extends State<AccountPage> {
                   style: constants.STILE_BOTTONE,
                   onPressed: () async {
                     prefs.setBool('hasGivenPermissionToUseBiometrics', true);
+                    Map userData = await login();
                     Navigator.of(context).pop();
-                    final success = await didAuthenticate();
-                    if (success) {
-                      await login();
-                      prefs.setBool('alreadyLoggedInWithBiometrics', true);
-                      prefs.setBool('isAlreadyLogged', true);
-                    }
+                    auth.authenticate(
+                      localizedReason:
+                          'Accedi con i tuoi dati biometrici per semplificare il processo di login.',
+                      options: AuthenticationOptions(
+                        biometricOnly: true,
+                      ),
+                    );
+                    await prefs.setBool('isAlreadyLogged', true);
+                    prefs.setBool('alreadyLoggedInWithBiometrics', true);
                   },
                   child: Text('Sì, Acconsento'),
                 ),
@@ -210,6 +189,9 @@ class _AccountPageState extends State<AccountPage> {
                     await prefs.setBool(
                         'hasGivenPermissionToUseBiometrics', false);
                     await prefs.setBool('isAlreadyLogged', true);
+                    // Map userData = await login();
+                    // storage.deleteAll();
+                    // clearAll();
                     Navigator.of(context).pop();
                   },
                   child: Text('No, non mostrare più'),
@@ -224,6 +206,8 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   clearAll() async {
+    final storage = FlutterSecureStorage();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     await storage.deleteAll();
     await prefs.remove('isAlreadyLogged');
     await prefs.remove('hasGivenPermissionToUseBiometrics');
@@ -233,6 +217,8 @@ class _AccountPageState extends State<AccountPage> {
 
   @override
   Widget build(BuildContext context) {
+    // clearAll();
+    final Future _getAuthentication = authenticate();
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -246,6 +232,7 @@ class _AccountPageState extends State<AccountPage> {
           FutureBuilder(
             future: _getAuthentication,
             builder: (context, snapshot) {
+              // print(snapshot);
               if (snapshot.connectionState == ConnectionState.done) {
                 if (snapshot.hasData) {
                   return SingleChildScrollView(
@@ -259,6 +246,15 @@ class _AccountPageState extends State<AccountPage> {
                           AccountPolizze(
                               data: widget.data, userData: snapshot.data),
                           constants.SPACER,
+                          // ElevatedButton(
+                          //   style: constants.STILE_BOTTONE,
+                          //   onPressed: () {
+                          //     widget.logParent();
+                          //     constants.userStatus = 0;
+                          //     clearAll();
+                          //   },
+                          //   child: Text('Log-Out'),
+                          // ),
                         ],
                       ),
                     ),
