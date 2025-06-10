@@ -188,12 +188,14 @@ class _AccountPolizzeState extends State<AccountPolizze> {
                                     ),
                                   ),
                                   child: Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(8, 18, 8, 8),
+                                    padding: EdgeInsets.fromLTRB(
+                                        8,
+                                        18,
+                                        MediaQuery.of(context).size.width / 3,
+                                        8),
                                     child: Text(
-                                      "Polizza n. " +
-                                          snapshot.data['data'][i]
-                                              ['NUMERO_POLIZZA'],
+                                      "Polizza " +
+                                          snapshot.data['data'][i]['DESC_RAMO'],
                                       textAlign: TextAlign.start,
                                       style: TextStyle(
                                         fontSize: 15,
