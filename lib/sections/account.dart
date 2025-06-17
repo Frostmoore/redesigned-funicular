@@ -232,52 +232,56 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         children: [
           SizedBox(
             height: 200,
-            child: Image(
-              image: AssetImage('lib/assets/polizze_header.jpg'),
-              fit: BoxFit.fitWidth,
-            ),
+            child: Image.asset('lib/assets/polizze_header.jpg',
+                fit: BoxFit.fitWidth),
           ),
-          FutureBuilder(
+          FutureBuilder<Map>(
             future: _getAuthentication,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (snapshot.hasData) {
-                  return SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          AccountHeader(
-                              data: widget.data, userData: snapshot.data),
-                          constants.SPACER,
-                          AccountPolizze(
-                              data: widget.data, userData: snapshot.data),
-                          constants.SPACER,
-                        ],
-                      ),
-                    ),
-                  );
-                } else {
-                  return LoginFallito(
-                      data: widget.data, logParent: widget.logParent);
-                }
-              } else {
+              if (snapshot.connectionState != ConnectionState.done) {
                 return const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                          color: constants.COLORE_PRINCIPALE),
-                    ],
+                  child: CircularProgressIndicator(
+                    color: constants.COLORE_PRINCIPALE,
                   ),
                 );
               }
+
+              if (!snapshot.hasData) {
+                return LoginFallito(
+                  data: widget.data,
+                  logParent: widget.logParent,
+                );
+              }
+
+              // ───────────────────────────────────────────
+              //  Estrazione sicura dello userData
+              //  snapshot.data ⇒ { result: ok/err, userData: … }
+              // ───────────────────────────────────────────
+              final raw = snapshot.data!; // Map<dynamic,dynamic>
+              // ───────── userInfo = raw['userData']['data']['result']  (o Map vuota)
+              final Map<String, dynamic> userInfo = (raw['userData']?['data']
+                      ?['result'] is Map)
+                  ? Map<String, dynamic>.from(raw['userData']['data']['result'])
+                  : <String, dynamic>{};
+
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    AccountHeader(data: widget.data, userData: userInfo),
+                    constants.SPACER,
+                    AccountPolizze(data: widget.data, userData: userInfo),
+                    constants.SPACER,
+                  ],
+                ),
+              );
             },
           ),
         ],
