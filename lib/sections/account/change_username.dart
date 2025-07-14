@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:Assidim/assets/constants.dart' as constants;
@@ -93,18 +94,28 @@ class _ChangeUsernameState extends State<ChangeUsername> {
   /*─────────────────────────────────────────────────────────────────*/
   @override
   Widget build(BuildContext context) {
+    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 24),
-        Text('Modifica credenziali',
-            style: Theme.of(context).textTheme.titleMedium),
+
+        /* ───── titolo ───── */
+        const HtmlWidget(
+          "<h2 style='text-align:center;'>Modifica Credenziali</h2>",
+        ),
         if (_busy) const LinearProgressIndicator(),
+
+        /* ───── form ───── */
         Form(
           key: _formKey,
           child: Column(
             children: [
-              // USERNAME
+              /* username */
               TextFormField(
                 controller: _uCtrl,
                 decoration: const InputDecoration(labelText: 'Username'),
@@ -113,7 +124,7 @@ class _ChangeUsernameState extends State<ChangeUsername> {
               ),
               const SizedBox(height: 12),
 
-              // EMAIL
+              /* e-mail */
               TextFormField(
                 controller: _mCtrl,
                 keyboardType: TextInputType.emailAddress,
@@ -123,11 +134,13 @@ class _ChangeUsernameState extends State<ChangeUsername> {
               ),
               const SizedBox(height: 16),
 
-              // CTA
+              /* CTA */
               ElevatedButton(
                 onPressed: _busy ? null : _submit,
+                style: constants.STILE_BOTTONE,
                 child: const Text('Salva'),
               ),
+              constants.SPACER,
             ],
           ),
         ),
