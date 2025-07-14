@@ -159,7 +159,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   ? HomePage(data: snapshot.data)
                   : _selectedIndex == 1
                       ? AccountContainer(data: snapshot.data)
-                      : GestioneConsensi(data: snapshot.data),
+                      : GestioneConsensi(
+                          data: snapshot.data as Map<String, dynamic>),
               floatingActionButton: ChiamataRapida(data: snapshot.data),
               bottomNavigationBar: BottomNavigationBar(
                 items: const <BottomNavigationBarItem>[
