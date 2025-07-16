@@ -19,7 +19,8 @@ import 'package:Assidim/sections/account/lista_consensi.dart';
 class GestioneConsensi extends StatefulWidget {
   /// Dati di configurazione generali dell’app (colori, testi, ecc.)
   final Map<String, dynamic> data;
-  const GestioneConsensi({super.key, required this.data});
+  final VoidCallback? goHome;
+  const GestioneConsensi({super.key, required this.data, this.goHome});
 
   @override
   State<GestioneConsensi> createState() => _GestioneConsensiState();
@@ -85,7 +86,17 @@ class _GestioneConsensiState extends State<GestioneConsensi> {
     final prefs = await SharedPreferences.getInstance();
     await _storage.deleteAll();
     await prefs.clear();
-    if (mounted) setState(() {}); // refresh UI
+
+    // Invece di Navigator/pop/variabili, chiama la callback passata dalla home:
+    if (widget.goHome != null) {
+      widget.goHome!();
+    }
+    // Puoi comunque mostrare lo SnackBar se vuoi, ma serve poco:
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dati locali rimossi')),
+      );
+    }
   }
 
   /*─────────────────────────────────────────────────────────────────*/
@@ -96,7 +107,10 @@ class _GestioneConsensiState extends State<GestioneConsensi> {
       builder: (context, snap) {
         // ───── loader
         if (snap.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+              child: CircularProgressIndicator(
+            color: constants.COLORE_PRINCIPALE,
+          ));
         }
 
         final logged = snap.data?.isNotEmpty ?? false;
