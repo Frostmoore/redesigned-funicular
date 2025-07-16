@@ -1,27 +1,16 @@
-// import 'dart:developer';
-// import 'package:accordion/accordion.dart';
-import 'dart:convert';
+// account.dart
 
+import 'dart:convert';
 import 'package:Assidim/sections/account/gestione_consensi.dart';
+import 'package:Assidim/sections/login_form.dart';
 import 'package:Assidim/sections/responses/login_fallito.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-// import 'package:Assidim/sections/chiamata_rapida.dart';
-// import 'package:webview_flutter/webview_flutter.dart';
-// import 'package:intl/intl.dart';import 'package:Assidim/assets/constants.dart' as constants;
 import 'package:http/http.dart' as http;
-// import 'dart:convert' as convert;
-//import 'package:notification_permissions/notification_permissions.dart';
 import 'package:local_auth/local_auth.dart';
-import 'dart:developer';
 import 'package:Assidim/sections/account/account_header.dart';
 import 'package:Assidim/sections/account/account_polizze.dart';
-import 'package:Assidim/sections/account/gear_menu.dart';
 import 'package:Assidim/assets/constants.dart' as constants;
-// import 'package:http/http.dart' as http;
-// import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-// import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
@@ -47,14 +36,20 @@ class _AccountPageState extends State<AccountPage> {
     _getAuthentication = _initPrefsAndAuthenticate();
   }
 
+  void refresh() {
+    setState(() {
+      _getAuthentication = _initPrefsAndAuthenticate();
+    });
+  }
+
   Future<Map> _initPrefsAndAuthenticate() async {
     prefs = await SharedPreferences.getInstance();
+    // Qui proviamo sempre a loggare, anche se non sei loggato.
     return await authenticate();
   }
 
   Future<bool> didAuthenticate() async {
     if (!await auth.canCheckBiometrics) return false;
-
     bool canAuthenticate =
         await auth.isDeviceSupported() && await auth.canCheckBiometrics;
 
@@ -75,7 +70,6 @@ class _AccountPageState extends State<AccountPage> {
       );
       return false;
     }
-
     return await auth.authenticate(
       localizedReason:
           'Accedi con i tuoi dati biometrici per semplificare il processo di login.',
@@ -84,67 +78,87 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Future<Map> login() async {
-    if (await storage.containsKey(key: 'username')) {
-      var username = await storage.read(key: 'username');
-      var password = await storage.read(key: 'password');
+    // Leggi le credenziali
+    var username = await storage.read(key: 'username');
+    var password = await storage.read(key: 'password');
 
-      var url = Uri.https(constants.PATH, constants.ENDPOINT_LOG);
-      var request = {
-        'id': constants.ID,
-        'token': constants.TOKEN,
-        'username': username,
-        'password': password,
-      };
-
-      var response = await http.post(
-        url,
-        headers: {'Content-Type': 'Application/json'},
-        body: jsonEncode(request),
-      );
-
-      var responseParsed = jsonDecode(response.body) as Map;
-      var userStatus = responseParsed['http_response_code'];
-
-      if (userStatus == '1') {
-        final externalUserId = responseParsed['playerid'];
-
-        try {
-          print('🔄 Login OneSignal con externalUserId: $externalUserId');
-          await OneSignal.login(externalUserId);
-          await Future.delayed(Duration(milliseconds: 500));
-
-          final sub = OneSignal.User.pushSubscription;
-          final token = sub.token;
-          final currentPlayerId = sub.id;
-          final optedIn = sub.optedIn;
-
-          if (token == null || currentPlayerId == null || optedIn == false) {
-            print(
-                '❌ OneSignal non attivo: token=$token, id=$currentPlayerId, optedIn=$optedIn');
-            print('🔁 Eseguo logout e nuovo login...');
-            await OneSignal.logout();
-            await Future.delayed(Duration(milliseconds: 500));
-            await OneSignal.login(externalUserId);
-          } else {
-            print(
-                '✅ OneSignal attivo: token=$token | playerId=$currentPlayerId | optedIn=$optedIn');
-          }
-        } catch (e) {
-          print('💥 Errore OneSignal: $e');
-        }
-
-        return {'result': 'ok', 'data': responseParsed, 'userStatus': 1};
-      } else {
-        constants.userStatus = userStatus;
-        widget.logParent();
-        return {'result': 'error', 'data': responseParsed, 'userStatus': 100};
-      }
-    } else {
+    // Se mancano, login impossibile
+    if (username == null ||
+        username.isEmpty ||
+        password == null ||
+        password.isEmpty) {
       return {'result': 'error', 'data': null, 'userStatus': 98};
+    }
+
+    var url = Uri.https(constants.PATH, constants.ENDPOINT_LOG);
+    var request = {
+      'id': constants.ID,
+      'token': constants.TOKEN,
+      'username': username,
+      'password': password,
+    };
+
+    var response = await http.post(
+      url,
+      headers: {'Content-Type': 'Application/json'},
+      body: jsonEncode(request),
+    );
+
+    var responseParsed = jsonDecode(response.body) as Map;
+    var userStatus = responseParsed['http_response_code'];
+
+    if (userStatus == '1') {
+      final externalUserId = responseParsed['playerid'];
+
+      try {
+        print('🔄 Login OneSignal con externalUserId: $externalUserId');
+        await OneSignal.login(externalUserId);
+        await Future.delayed(Duration(milliseconds: 500));
+
+        final sub = OneSignal.User.pushSubscription;
+        final token = sub.token;
+        final currentPlayerId = sub.id;
+        final optedIn = sub.optedIn;
+
+        if (token == null || currentPlayerId == null || optedIn == false) {
+          print(
+              '❌ OneSignal non attivo: token=$token, id=$currentPlayerId, optedIn=$optedIn');
+          print('🔁 Eseguo logout e nuovo login...');
+          await OneSignal.logout();
+          await Future.delayed(Duration(milliseconds: 500));
+          await OneSignal.login(externalUserId);
+        } else {
+          print(
+              '✅ OneSignal attivo: token=$token | playerId=$currentPlayerId | optedIn=$optedIn');
+        }
+      } catch (e) {
+        print('💥 Errore OneSignal: $e');
+      }
+
+      return {'result': 'ok', 'data': responseParsed, 'userStatus': 1};
+    } else {
+      constants.userStatus = userStatus;
+      widget.logParent();
+      return {'result': 'error', 'data': responseParsed, 'userStatus': 100};
     }
   }
 
   Future<Map> authenticate() async {
+    // Se non sei loggato, mostra il form di login.
+    final prefs = await SharedPreferences.getInstance();
+    var username = await storage.read(key: 'username');
+    var password = await storage.read(key: 'password');
+
+    if (!(prefs.getBool('isAlreadyLogged') ?? false) ||
+        username == null ||
+        username.isEmpty ||
+        password == null ||
+        password.isEmpty) {
+      // Non autenticato, niente login automatico
+      return {};
+    }
+
+    // Se c'è consenso biometrico, segui la trafila biometrica
     if (prefs.containsKey('hasGivenPermissionToUseBiometrics')) {
       if (prefs.getBool('hasGivenPermissionToUseBiometrics') == true) {
         if (prefs.containsKey('alreadyLoggedInWithBiometrics')) {
@@ -200,6 +214,7 @@ class _AccountPageState extends State<AccountPage> {
                       await login();
                       prefs.setBool('alreadyLoggedInWithBiometrics', true);
                       prefs.setBool('isAlreadyLogged', true);
+                      refresh();
                     }
                   },
                   child: Text('Sì, Acconsento'),
@@ -211,6 +226,7 @@ class _AccountPageState extends State<AccountPage> {
                         'hasGivenPermissionToUseBiometrics', false);
                     await prefs.setBool('isAlreadyLogged', true);
                     Navigator.of(context).pop();
+                    refresh();
                   },
                   child: Text('No, non mostrare più'),
                 ),
@@ -232,7 +248,6 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
@@ -253,24 +268,22 @@ class _AccountPageState extends State<AccountPage> {
                 );
               }
 
-              if (!snapshot.hasData) {
-                return LoginFallito(
-                  data: widget.data,
-                  logParent: widget.logParent,
-                );
-              }
-
-              // ───────────────────────────────────────────
-              //  Estrazione sicura dello userData
-              //  snapshot.data ⇒ { result: ok/err, userData: … }
-              // ───────────────────────────────────────────
-              final raw = snapshot.data!; // Map<dynamic,dynamic>
-              // ───────── userInfo = raw['userData']['data']['result']  (o Map vuota)
+              // Se non ci sono dati → mostra il login form
+              final raw = snapshot.data ?? {};
               final Map<String, dynamic> userInfo = (raw['userData']?['data']
                       ?['result'] is Map)
                   ? Map<String, dynamic>.from(raw['userData']['data']['result'])
                   : <String, dynamic>{};
 
+              if (userInfo.isEmpty) {
+                // Passa la funzione "refresh" per forzare il reload dopo login
+                return LoginForm(
+                  data: widget.data,
+                  logParent: refresh,
+                );
+              }
+
+              // Altrimenti, sei loggato: mostra la pagina utente
               return Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
