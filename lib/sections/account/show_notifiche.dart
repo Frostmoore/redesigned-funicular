@@ -18,7 +18,8 @@ class _ShowNotificheState extends State<ShowNotifiche> {
     final getNotifiche = await http.post(
       Uri.parse('https://${constants.PATH}${constants.ENDPOINT_NOTI}'),
       body: {
-        'username': widget.data['userData']['data']['result']['username'],
+        //'username': widget.data['userData']['data']['result']['username'],
+        'username': widget.data['username'],
       },
     );
     return jsonDecode(getNotifiche.body) as Map;
@@ -69,7 +70,7 @@ class _ShowNotificheState extends State<ShowNotifiche> {
         future: notifiche,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            var user = widget.data['userData']['data']['result']['username'];
+            var user = widget.data['username'];
             if (snapshot.hasData) {
               List notificheClean = cleanNotifiche(snapshot.data, user);
 

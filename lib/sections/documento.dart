@@ -34,7 +34,7 @@ class _DocumentoState extends State<Documento> {
       headerBackgroundColor: Colors.transparent,
       headerBackgroundColorOpened: Colors.transparent,
       contentBorderColor: Colors.transparent,
-      contentBackgroundColor: Colors.transparent,
+      contentBackgroundColor: const Color(0xfff8f9fa),
       contentHorizontalPadding: 8,
       disableScrolling: true,
       headerPadding: const EdgeInsets.all(0),
@@ -86,13 +86,16 @@ class _DocumentoState extends State<Documento> {
                         onPressed: () => constants.openUrl(url_documento),
                         label: const Text('Carica un Documento'),
                         style: ButtonStyle(
-                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          shape:
+                              MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(5),
                             ),
                           ),
-                          backgroundColor: MaterialStateProperty.all<Color>(colore_terziario),
-                          foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              colore_terziario),
+                          foregroundColor:
+                              MaterialStateProperty.all<Color>(Colors.white),
                         ),
                         icon: const Icon(Icons.web),
                       ),

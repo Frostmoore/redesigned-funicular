@@ -20,7 +20,8 @@ class _NotificheState extends State<Notifiche> {
     final notifiche = await http.post(
       Uri.parse('https://' + constants.PATH + constants.ENDPOINT_NOTI),
       body: {
-        'username': widget.data['userData']['data']['result']['username'],
+        //'username': widget.data['userData']['data']['result']['username'],
+        'username': widget.data['username'],
       },
     );
     // print(notifiche.body);
@@ -45,12 +46,16 @@ class _NotificheState extends State<Notifiche> {
             if (snapshot.data['status'] == 'ok') {
               var newNotifiche = 0;
               for (var i = 0; i < snapshot.data['data'].length; i++) {
-                List destinatari = snapshot.data['data'][i]['destinatari'].split(',');
-                List lettaDa =
-                    snapshot.data['data'][i]['letta_da'] == null ? [''] : snapshot.data['data'][i]['letta_da'].split(',');
-                if (destinatari.contains(widget.data['userData']['data']['result']['username'])) {
+                List destinatari =
+                    snapshot.data['data'][i]['destinatari'].split(',');
+                List lettaDa = snapshot.data['data'][i]['letta_da'] == null
+                    ? ['']
+                    : snapshot.data['data'][i]['letta_da'].split(',');
+                //if (destinatari.contains(widget.data['userData']['data']['result']['username'])) {
+                if (destinatari.contains(widget.data['username'])) {
                   //
-                  if (!lettaDa.contains(widget.data['userData']['data']['result']['username'])) {
+                  //if (!lettaDa.contains(widget.data['userData']['data']['result']['username'])) {
+                  if (!lettaDa.contains(widget.data['username'])) {
                     newNotifiche++;
                   }
                   // notifiche_personali.add(snapshot.data['data'][i]);
@@ -64,7 +69,11 @@ class _NotificheState extends State<Notifiche> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => ShowNotifiche(data: widget.data)))
+                      Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      ShowNotifiche(data: widget.data)))
                           .then((value) => setState(() {}));
                     },
                     style: constants.STILE_BOTTONE,

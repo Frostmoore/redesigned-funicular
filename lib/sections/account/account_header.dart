@@ -18,7 +18,8 @@ class _AccountHeaderState extends State<AccountHeader> {
   Widget build(BuildContext context) {
     if (widget.userData != null) {
       // print(widget.userData['userData']['data']);
-      var nome = widget.userData['userData']['data']['result']['nome'];
+      //var nome = widget.userData['userData']['data']['result']['nome'];
+      var nome = widget.userData['nome'];
       String? saluto =
           '<p style="text-align:center">Ciao, <strong>$nome</strong>!<br>Qui potrai controllare lo stato delle tue polizze e verificarne la data di scadenza.</p>';
       return Column(

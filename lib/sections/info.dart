@@ -34,7 +34,7 @@ class _InfoState extends State<Info> {
           headerBackgroundColor: Colors.transparent,
           headerBackgroundColorOpened: Colors.transparent,
           contentBorderColor: Colors.transparent,
-          contentBackgroundColor: Colors.transparent,
+          contentBackgroundColor: const Color(0xfff8f9fa),
           contentHorizontalPadding: 0,
           disableScrolling: true,
           headerPadding: const EdgeInsets.all(0),
