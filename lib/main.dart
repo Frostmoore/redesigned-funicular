@@ -152,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> {
             var colore_principale = int.parse(colori[0]);
             var colore_secondario = int.parse(colori[1]);
             return Scaffold(
-              backgroundColor: const Color(0xfff8f9fa),
+              backgroundColor: Colors.white,
               appBar: AppBar(
                 backgroundColor: Theme.of(context).colorScheme.inversePrimary,
                 title: const Row(
