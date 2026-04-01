@@ -21,17 +21,19 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
   bool _isLoading = false; // FLAG per evitare richieste parallele
   int currentPage = 0;
   int? _cardDismissedIndex; // per animazione eliminazione
+  late AppProvider _provider;
 
   @override
   void initState() {
     super.initState();
-    context.read<AppProvider>().addListener(_caricaTutto);
+    _provider = context.read<AppProvider>();
+    _provider.addListener(_caricaTutto);
     _caricaTutto();
   }
 
   @override
   void dispose() {
-    context.read<AppProvider>().removeListener(_caricaTutto);
+    _provider.removeListener(_caricaTutto);
     super.dispose();
   }
 
