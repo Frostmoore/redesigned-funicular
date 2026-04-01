@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:Assidim/assets/constants.dart' as constants;
 
-class Cai extends StatefulWidget {
-  final data;
-  const Cai({super.key, required this.data});
+class Cai extends StatelessWidget {
+  const Cai({super.key});
 
-  @override
-  State<Cai> createState() => _CaiState();
-}
-
-class _CaiState extends State<Cai> {
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.of(context).size.width;
 
     return Column(
       children: [

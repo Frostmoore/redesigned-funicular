@@ -1,32 +1,23 @@
+import 'package:Assidim/core/providers/app_provider.dart';
 import 'package:Assidim/sections/informazioni.dart';
 import 'package:Assidim/sections/notifica.dart';
-import 'package:flutter/material.dart';
-import 'package:Assidim/assets/constants.dart' as constants;
 import 'package:accordion/accordion.dart';
+import 'package:Assidim/assets/constants.dart' as constants;
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class Info extends StatefulWidget {
-  final data;
-  const Info({super.key, required this.data});
+class Info extends StatelessWidget {
+  const Info({super.key});
 
-  @override
-  State<Info> createState() => _InfoState();
-}
-
-class _InfoState extends State<Info> {
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery.of(context).size.width;
-    var info_titolo = widget.data['info_titolo'];
-    var info_immagine_dirty = widget.data['info_immagine'];
-    var info_immagine = 'lib/assets/info_immagine.png';
-    /*final PageController _controller = PageController(viewportFraction: 0.8);*/
-
-    //return InformazioniAgenzie();
+    final config = context.watch<AppProvider>().config!;
+    final width = MediaQuery.of(context).size.width;
 
     return Column(
       children: [
         constants.SPACER,
-        Notifica(),
+        const Notifica(),
         Accordion(
           headerBorderWidth: 1,
           headerBorderColor: Colors.transparent,
@@ -37,34 +28,27 @@ class _InfoState extends State<Info> {
           contentBackgroundColor: const Color(0xfff8f9fa),
           contentHorizontalPadding: 0,
           disableScrolling: true,
-          headerPadding: const EdgeInsets.all(0),
+          headerPadding: EdgeInsets.zero,
           children: [
             AccordionSection(
-              rightIcon: const Icon(
-                Icons.arrow_drop_down_rounded,
-                size: 45,
-              ),
+              rightIcon: const Icon(Icons.arrow_drop_down_rounded, size: 45),
               header: SizedBox(
                 width: width - 16,
                 height: 70,
                 child: DecoratedBox(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(info_immagine),
+                      image: AssetImage('lib/assets/info_immagine.png'),
                       fit: BoxFit.contain,
                     ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
-                    child: Text(
-                      info_titolo,
-                      textAlign: TextAlign.start,
-                      style: constants.H1,
-                    ),
+                    child: Text(config.infoTitolo, style: constants.H1),
                   ),
                 ),
               ),
-              content: InformazioniAgenzie(data: widget.data),
+              content: const InformazioniAgenzie(),
             ),
           ],
         ),

@@ -8,17 +8,12 @@ import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:Assidim/assets/constants.dart' as constants;
+import 'package:Assidim/core/models/user_data.dart';
 
-/// ════════════════════════════════════════════════════════════════════
-///  Modifica username / e-mail (senza nuovo login)
-/// ════════════════════════════════════════════════════════════════════
 class ChangeUsername extends StatefulWidget {
-  const ChangeUsername({
-    super.key,
-    required this.userData, // <─ dati utente già disponibili
-  });
+  const ChangeUsername({super.key, required this.userData});
 
-  final Map<String, dynamic> userData;
+  final UserData userData;
 
   @override
   State<ChangeUsername> createState() => _ChangeUsernameState();
@@ -32,28 +27,30 @@ class _ChangeUsernameState extends State<ChangeUsername> {
 
   bool _busy = false;
 
-  /*─────────────────────────────────────────────────────────────────*/
   @override
   void initState() {
     super.initState();
-
-    // pre-compila campi con i dati ricevuti
-    _uCtrl.text = widget.userData['username']?.toString() ?? '';
-    _mCtrl.text = widget.userData['email']?.toString() ?? '';
+    _uCtrl.text = widget.userData.username;
+    _mCtrl.text = widget.userData.email;
   }
 
-  /*─────────────────────────────────────────────────────────────────*/
+  @override
+  void dispose() {
+    _uCtrl.dispose();
+    _mCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _busy = true);
-    final sw = Stopwatch()..start();
 
     final url =
         Uri.parse('https://hybridandgogsv.it/res/api/v1/change_username.php');
 
     final payload = jsonEncode({
-      'id': widget.userData['id'].toString(),
+      'id': widget.userData.id,
       'username': _uCtrl.text.trim(),
       'email': _mCtrl.text.trim(),
     });
@@ -64,14 +61,12 @@ class _ChangeUsernameState extends State<ChangeUsername> {
       final res = await http.post(url,
           headers: {'Content-Type': 'application/json'}, body: payload);
 
-      debugPrint('[CHANGE] ← ${res.statusCode}  '
-          '(${sw.elapsedMilliseconds} ms)  ${res.body}');
+      debugPrint('[CHANGE] ← ${res.statusCode}  ${res.body}');
 
       final ok = res.statusCode == 200 &&
           (jsonDecode(res.body)['http_response_code'] == '1');
 
       if (ok) {
-        // aggiorna secure-storage per i futuri login automatici
         await _store.write(key: 'username', value: _uCtrl.text.trim());
         await _store.write(key: 'email', value: _mCtrl.text.trim());
         _showSnack('Credenziali aggiornate');
@@ -91,31 +86,20 @@ class _ChangeUsernameState extends State<ChangeUsername> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  /*─────────────────────────────────────────────────────────────────*/
   @override
   Widget build(BuildContext context) {
-    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
-        );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 24),
-
-        /* ───── titolo ───── */
         const HtmlWidget(
           "<h2 style='text-align:center;'>Modifica Credenziali</h2>",
         ),
         if (_busy) const LinearProgressIndicator(),
-
-        /* ───── form ───── */
         Form(
           key: _formKey,
           child: Column(
             children: [
-              /* username */
               TextFormField(
                 controller: _uCtrl,
                 decoration: const InputDecoration(labelText: 'Username'),
@@ -123,8 +107,6 @@ class _ChangeUsernameState extends State<ChangeUsername> {
                     (v == null || v.trim().isEmpty) ? 'Obbligatorio' : null,
               ),
               const SizedBox(height: 12),
-
-              /* e-mail */
               TextFormField(
                 controller: _mCtrl,
                 keyboardType: TextInputType.emailAddress,
@@ -133,8 +115,6 @@ class _ChangeUsernameState extends State<ChangeUsername> {
                     (v == null || !v.contains('@')) ? 'Email non valida' : null,
               ),
               const SizedBox(height: 16),
-
-              /* CTA */
               ElevatedButton(
                 onPressed: _busy ? null : _submit,
                 style: constants.STILE_BOTTONE,

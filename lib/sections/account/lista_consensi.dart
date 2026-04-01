@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:http/http.dart' as http;
 import 'package:Assidim/assets/constants.dart' as constants;
+import 'package:Assidim/core/models/user_data.dart';
 
 class ListaConsensi extends StatefulWidget {
-  final Map<String, dynamic> userData;
+  final UserData userData;
   const ListaConsensi({super.key, required this.userData});
 
   @override
@@ -20,17 +21,16 @@ class _ListaConsensiState extends State<ListaConsensi> {
   @override
   void initState() {
     super.initState();
-    bool _raw(dynamic r) => (r?.toString().split('|').first == '1');
-    _p2 = _raw(widget.userData['privacy2']);
-    _p3 = _raw(widget.userData['privacy3']);
-    _p4 = _raw(widget.userData['privacy4']);
+    bool parse(String? r) => r?.split('|').first == '1';
+    _p2 = parse(widget.userData.privacy2);
+    _p3 = parse(widget.userData.privacy3);
+    _p4 = parse(widget.userData.privacy4);
   }
 
-  /*──────────────────────────────────────────────────────────────*/
   Future<void> _save(int id, bool optimisticValue) async {
     final url = Uri.https(constants.PATH, constants.ENDPOINT_PRIV);
     final body = jsonEncode({
-      'id': widget.userData['id'].toString(),
+      'id': widget.userData.id,
       'privacyId': id.toString(),
       'privacyStatus': optimisticValue,
     });
@@ -46,7 +46,6 @@ class _ListaConsensiState extends State<ListaConsensi> {
       debugPrint('[PRIV] ← ${res.statusCode} ok=$ok ${res.body}');
       if (!ok) throw Exception('save failed');
     } catch (e) {
-      // ❌ errore → ripristina valore precedente
       debugPrint('[PRIV] errore $e – rollback');
       setState(() {
         if (id == 2) _p2 = !_p2;
@@ -62,7 +61,6 @@ class _ListaConsensiState extends State<ListaConsensi> {
     }
   }
 
-  /*──────────────────────────────────────────────────────────────*/
   @override
   Widget build(BuildContext context) => Column(
         children: [
@@ -71,11 +69,11 @@ class _ListaConsensiState extends State<ListaConsensi> {
           ),
           if (_busy) const LinearProgressIndicator(),
           constants.SPACER,
-          _row(constants.privacy2, _p2, 2),
+          _row(constants.PRIVACY_2, _p2, 2),
           constants.SPACER,
-          _row(constants.privacy3, _p3, 3),
+          _row(constants.PRIVACY_3, _p3, 3),
           constants.SPACER,
-          _row(constants.privacy4, _p4, 4),
+          _row(constants.PRIVACY_4, _p4, 4),
           constants.SPACER,
         ],
       );
@@ -87,13 +85,11 @@ class _ListaConsensiState extends State<ListaConsensi> {
             value: value,
             activeColor: constants.COLORE_PRINCIPALE,
             onChanged: (v) {
-              // ◉ aggiorna SUBITO l’interfaccia
               setState(() {
                 if (id == 2) _p2 = v;
                 if (id == 3) _p3 = v;
                 if (id == 4) _p4 = v;
               });
-              // ◉ poi chiama l’API (rollback se fallisce)
               _save(id, v);
             },
           ),

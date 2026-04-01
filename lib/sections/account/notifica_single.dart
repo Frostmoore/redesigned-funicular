@@ -1,131 +1,101 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:provider/provider.dart';
 import 'package:Assidim/assets/constants.dart' as constants;
+import 'package:Assidim/core/models/notifica.dart';
+import 'package:Assidim/core/providers/app_provider.dart';
 
 class NotificaSingle extends StatefulWidget {
-  final data;
-  final userId;
-  const NotificaSingle({super.key, required this.data, required this.userId});
+  final String id;
+
+  const NotificaSingle({super.key, required this.id});
 
   @override
   State<NotificaSingle> createState() => _NotificaSingleState();
 }
 
 class _NotificaSingleState extends State<NotificaSingle> {
-  Future<Map> _getNotifica() async {
-    final getNotifica = await http.post(
-      Uri.parse("https://${constants.PATH}${constants.ENDPOINT_SINGLENOT}"),
-      body: {
-        'id': widget.data,
-        'user': widget.userId,
-      },
-    );
-    return jsonDecode(getNotifica.body) as Map;
-  }
+  late Future<Notifica?> _future;
+  late String _username;
 
-  Future<Map> _markAsRead(id, user) async {
-    final gigi = await http.post(
-      Uri.parse("https://${constants.PATH}${constants.ENDPOINT_READNOTI}"),
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode({'id': id, 'user': user}),
-    );
-    return jsonDecode(gigi.body);
-  }
-
-  Map<String, dynamic> cleanNotifica(Map dati, user) {
-    final n = dati['data'];
-    return {
-      'id': n['id'],
-      'titolo': n['titolo'],
-      'contenuto': n['contenuto'],
-      'immagine': n['immagine'],
-      'letta_da': n['letta_da'],
-      'link': n['link'],
-      'testolink': n['testolink'],
-      'dataora': n['dataora'],
-    };
+  @override
+  void initState() {
+    super.initState();
+    final provider = context.read<AppProvider>();
+    _username = provider.currentUser!.username;
+    _future = provider.notificheService.fetchSingle(widget.id, _username);
   }
 
   @override
   Widget build(BuildContext context) {
-    final Future notifica = _getNotifica();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Row(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Text(''),
-          ],
+          children: [Text('')],
         ),
       ),
-      body: FutureBuilder(
-        future: notifica,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            var user = widget.userId;
-            if (snapshot.hasData) {
-              final notificaClean = cleanNotifica(snapshot.data, user);
-              print(notificaClean);
-              _markAsRead(notificaClean['id'], user);
-
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (notificaClean['titolo'] != null &&
-                          notificaClean['titolo'].toString().isNotEmpty)
-                        Text(
-                          notificaClean['titolo'],
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
-                        ),
-                      if (notificaClean['immagine'] != null &&
-                          notificaClean['immagine'].toString().isNotEmpty) ...[
-                        constants.SPACER_MEDIUM,
-                        Image.network(notificaClean['immagine']),
-                        constants.SPACER_MEDIUM,
-                      ],
-                      if (notificaClean['contenuto'] != null &&
-                          notificaClean['contenuto'].toString().isNotEmpty)
-                        HtmlWidget(notificaClean['contenuto']),
-                      if (notificaClean['link'] != null &&
-                          notificaClean['link'].toString().isNotEmpty &&
-                          notificaClean['testolink'] != null &&
-                          notificaClean['testolink'].toString().isNotEmpty) ...[
-                        constants.SPACER_MEDIUM,
-                        ElevatedButton(
-                          onPressed: () {
-                            constants.openUrl(Uri.parse(notificaClean['link']));
-                          },
-                          style: constants.STILE_BOTTONE,
-                          child: Text(notificaClean['testolink']),
-                        ),
-                        constants.SPACER_MEDIUM,
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            } else {
-              return const Center(child: Text("Nessun dato disponibile"));
-            }
-          } else {
+      body: FutureBuilder<Notifica?>(
+        future: _future,
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) {
             return const Center(
               child: CircularProgressIndicator(
                 color: constants.COLORE_PRINCIPALE,
               ),
             );
           }
+
+          final n = snap.data;
+          if (n == null) {
+            return const Center(child: Text('Nessun dato disponibile'));
+          }
+
+          // Mark as read — fire and forget
+          context
+              .read<AppProvider>()
+              .notificheService
+              .markAsRead(n.id, _username);
+
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (n.titolo.isNotEmpty)
+                    Text(
+                      n.titolo,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  if (n.immagine != null && n.immagine!.isNotEmpty) ...[
+                    constants.SPACER_MEDIUM,
+                    Image.network(n.immagine!),
+                    constants.SPACER_MEDIUM,
+                  ],
+                  if (n.contenuto.isNotEmpty) HtmlWidget(n.contenuto),
+                  if (n.link != null &&
+                      n.link!.isNotEmpty &&
+                      n.testolink != null &&
+                      n.testolink!.isNotEmpty) ...[
+                    constants.SPACER_MEDIUM,
+                    ElevatedButton(
+                      onPressed: () =>
+                          constants.openUrl(Uri.parse(n.link!)),
+                      style: constants.STILE_BOTTONE,
+                      child: Text(n.testolink!),
+                    ),
+                    constants.SPACER_MEDIUM,
+                  ],
+                ],
+              ),
+            ),
+          );
         },
       ),
     );

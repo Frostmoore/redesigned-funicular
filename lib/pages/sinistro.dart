@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
 import 'package:Assidim/assets/constants.dart' as constants;
 import 'dart:convert' as convert;
 import 'package:Assidim/sections/liberatoria.dart';
@@ -408,9 +407,7 @@ class _SinistroFormState extends State<SinistroForm> {
         if (response.statusCode == 200) {
           final responseData = await response.stream.bytesToString();
           print(responseData);
-          final responseJson = jsonDecode(responseData);
-          // Handle success
-          // print('Success: $responseJson');
+;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Dati inviati con successo!')),
           );

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:Assidim/assets/constants.dart' as constants;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class NessunRisultato extends StatefulWidget {
   const NessunRisultato({super.key});

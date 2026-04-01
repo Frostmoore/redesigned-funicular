@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
 import 'package:Assidim/assets/constants.dart' as constants;
 import 'dart:convert' as convert;
 import 'package:Assidim/sections/liberatoria.dart';
@@ -151,18 +150,17 @@ class _PreventivoFormState extends State<PreventivoForm> {
       });
 
       if (response.statusCode == 200) {
-        final responseData = await response.stream.bytesToString();
-        final responseJson = jsonDecode(responseData);
+        await response.stream.drain<void>();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Dati inviati con successo!')),
         );
         Navigator.of(context).pop();
       } else {
-        final responseData = await response.stream.bytesToString();
+        final errorBody = await response.stream.bytesToString();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Errore nell\'invio dei dati!')),
         );
-        print('Errore HTTP ${response.statusCode}: $responseData');
+        debugPrint('Errore HTTP ${response.statusCode}: $errorBody');
       }
     }
   }

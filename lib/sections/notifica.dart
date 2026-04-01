@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 // IMPORTA IL NOTIFIER DA main.dart
-import 'package:Assidim/main.dart' show notificaAggiornaTrigger;
+import 'package:Assidim/core/providers/app_provider.dart';
+import 'package:provider/provider.dart';
 
 class Notifica extends StatefulWidget {
   const Notifica({super.key});
@@ -24,13 +25,13 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    notificaAggiornaTrigger.addListener(_caricaTutto);
+    context.read<AppProvider>().addListener(_caricaTutto);
     _caricaTutto();
   }
 
   @override
   void dispose() {
-    notificaAggiornaTrigger.removeListener(_caricaTutto);
+    context.read<AppProvider>().removeListener(_caricaTutto);
     super.dispose();
   }
 

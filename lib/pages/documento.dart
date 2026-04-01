@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
 import 'package:Assidim/assets/constants.dart' as constants;
-import 'package:file_picker/file_picker.dart';
 import 'dart:convert' as convert;
 import 'package:Assidim/sections/liberatoria.dart';
 
@@ -139,10 +137,7 @@ class _DocumentoFormState extends State<DocumentoForm> {
         });
 
         if (response.statusCode == 200) {
-          final responseData = await response.stream.bytesToString();
-          final responseJson = jsonDecode(responseData);
-          // Handle success
-          // print('Success: $responseJson');
+          await response.stream.drain<void>();;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Dati inviati con successo!')),
           );
