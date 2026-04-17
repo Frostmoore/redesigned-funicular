@@ -1,7 +1,6 @@
-import 'package:Assidim/assets/constants.dart' as constants;
 import 'package:Assidim/core/providers/app_provider.dart';
+import 'package:Assidim/sections/responses/auth_feedback.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:provider/provider.dart';
 
 class ResetPassword extends StatelessWidget {
@@ -9,23 +8,16 @@ class ResetPassword extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const HtmlWidget(
-          "<h2 style='text-align:center;font-weight:bold;'>"
-          "Hai chiesto la reimpostazione della tua Password!</h2>",
-        ),
-        constants.SPACER_MEDIUM,
-        const HtmlWidget(
-          "<p style='text-align:center;'>Ti abbiamo inviato un'email con il link "
-          "per la reimpostazione.<br>Controlla anche nella Posta Indesiderata.</p>",
-        ),
-        constants.SPACER_MEDIUM,
-        ElevatedButton(
-          style: constants.STILE_BOTTONE,
+    return AuthFeedback(
+      icon: Icons.mark_email_read_rounded,
+      iconColor: Colors.green,
+      title: 'Email inviata!',
+      body: 'Ti abbiamo inviato un\'email con il link per reimpostare la '
+          'password. Controlla anche la cartella della posta indesiderata.',
+      actions: [
+        AuthFeedbackButton(
+          label: 'Ho capito',
           onPressed: context.read<AppProvider>().goToLogin,
-          child: const Text('HO CAPITO'),
         ),
       ],
     );

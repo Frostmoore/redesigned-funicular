@@ -36,16 +36,17 @@ class AuthResult {
   factory AuthResult.ok(UserData user) =>
       AuthResult._(success: true, user: user);
 
-  factory AuthResult.notLoggedIn() =>
-      AuthResult._(success: false, failureReason: AuthFailureReason.invalidCredentials);
+  factory AuthResult.notLoggedIn() => AuthResult._(
+      success: false,
+      failureReason: AuthFailureReason.invalidCredentials);
 
   factory AuthResult.failure(String code, {String? message}) {
     final reason = switch (code) {
       '97' => AuthFailureReason.inactiveUser,
       '98' => AuthFailureReason.invalidCredentials,
-      '3'  => AuthFailureReason.userAlreadyExists,
-      '4'  => AuthFailureReason.wrongAgencyCode,
-      _    => AuthFailureReason.unknown,
+      '3' => AuthFailureReason.userAlreadyExists,
+      '4' => AuthFailureReason.wrongAgencyCode,
+      _ => AuthFailureReason.unknown,
     };
     return AuthResult._(
       success: false,
@@ -55,11 +56,18 @@ class AuthResult {
     );
   }
 
-  factory AuthResult.networkError(String message) =>
-      AuthResult._(success: false, failureReason: AuthFailureReason.network, errorMessage: message);
+  factory AuthResult.networkError(String message) => AuthResult._(
+      success: false,
+      failureReason: AuthFailureReason.network,
+      errorMessage: message);
 }
 
-enum RegisterFailureReason { userAlreadyExists, wrongAgencyCode, network, unknown }
+enum RegisterFailureReason {
+  userAlreadyExists,
+  wrongAgencyCode,
+  network,
+  unknown
+}
 
 class RegisterResult {
   final bool success;
@@ -78,13 +86,15 @@ class RegisterResult {
     final reason = switch (code) {
       '3' => RegisterFailureReason.userAlreadyExists,
       '4' => RegisterFailureReason.wrongAgencyCode,
-      _   => RegisterFailureReason.unknown,
+      _ => RegisterFailureReason.unknown,
     };
-    return RegisterResult._(success: false, failureReason: reason, rawResponseCode: code);
+    return RegisterResult._(
+        success: false, failureReason: reason, rawResponseCode: code);
   }
 
   factory RegisterResult.networkError() =>
-      const RegisterResult._(success: false, failureReason: RegisterFailureReason.network);
+      const RegisterResult._(
+          success: false, failureReason: RegisterFailureReason.network);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,42 +111,64 @@ class AuthService {
 
   Future<AuthResult> login(String username, String password) async {
     try {
-      final url = Uri.https(constants.PATH, constants.ENDPOINT_LOG);
-      final data = await _api.postJson(url, body: {
-        'id': constants.ID,
-        'token': constants.TOKEN,
+      final url = Uri.https(constants.PATH, constants.ENDPOINT_V2_LOGIN);
+      final data = await _api.postJsonV2(url, body: {
+        'agency_id': constants.ID,
         'username': username,
         'password': password,
       });
 
-      final code = data['http_response_code']?.toString() ?? '';
-      if (code != '1') {
-        return AuthResult.failure(code, message: data['result']?.toString());
-      }
+      final token = data['token']?.toString() ?? '';
+      final userMap = data['user'] as Map<String, dynamic>?;
+      if (userMap == null) return AuthResult.failure('100');
 
-      final resultMap = data['result'];
-      if (resultMap is! Map<String, dynamic>) {
-        return AuthResult.failure('100');
-      }
+      _api.setToken(token);
+      await _storage.saveJwtToken(token);
 
-      final playerId = data['playerid']?.toString();
-      final user = UserData.fromJson(resultMap, playerId: playerId);
-
+      final user = UserData.fromJson(userMap);
       await _storage.saveCredentials(username: user.username, password: password);
-      await _storage.saveUserData(user, playerId: playerId);
+      await _storage.saveUserData(user);
       await _storage.setLoggedIn(true);
 
       await _syncOneSignal(user.playerId ?? '${user.username}_login');
 
       return AuthResult.ok(user);
     } on ApiException catch (e) {
+      if (e.statusCode == 401 || e.code == 'invalid_credentials') {
+        return AuthResult.failure('98');
+      }
+      if (e.statusCode == 403 || e.code == 'inactive_user') {
+        return AuthResult.failure('97');
+      }
       return AuthResult.networkError(e.message);
     }
   }
 
-  // ─── Auto-login (riutilizzo credenziali salvate) ──────────────────────────
+  // ─── Auto-login ───────────────────────────────────────────────────────────
 
   Future<AuthResult> autoLogin() async {
+    // Try JWT first
+    final jwt = await _storage.getJwtToken();
+    if (jwt != null && jwt.isNotEmpty) {
+      _api.setToken(jwt);
+      try {
+        final url = Uri.https(constants.PATH, constants.ENDPOINT_V2_ME);
+        final data = await _api.getV2(url);
+        final userMap = data['user'] as Map<String, dynamic>? ?? data;
+        final user = UserData.fromJson(userMap);
+        return AuthResult.ok(user);
+      } on ApiException catch (e) {
+        if (e.statusCode == 401) {
+          _api.clearToken();
+          await _storage.clearJwtToken();
+          // Fall through to credentials
+        } else {
+          return AuthResult.networkError(e.message);
+        }
+      }
+    }
+
+    // Fallback: re-login with stored credentials
     final loggedIn = await _storage.isLoggedIn();
     if (!loggedIn) return AuthResult.notLoggedIn();
 
@@ -163,12 +195,11 @@ class AuthService {
     required bool privacy4,
   }) async {
     try {
-      final url = Uri.https(constants.PATH, constants.ENDPOINT_REG);
+      final url = Uri.https(constants.PATH, constants.ENDPOINT_V2_REG);
       final playerId = '${username}_${DateTime.now().millisecondsSinceEpoch}';
 
-      final data = await _api.postJson(url, body: {
-        'id': constants.ID,
-        'token': constants.TOKEN,
+      await _api.postJsonV2(url, body: {
+        'agency_id': constants.ID,
         'username': username,
         'password': password,
         'nome': nome,
@@ -184,10 +215,14 @@ class AuthService {
         'playerid': playerId,
       });
 
-      final code = data['http_response_code']?.toString() ?? '100';
-      if (code == '5') return RegisterResult.ok();
-      return RegisterResult.failure(code);
-    } on ApiException {
+      return RegisterResult.ok();
+    } on ApiException catch (e) {
+      if (e.statusCode == 409 || e.code == 'user_exists') {
+        return RegisterResult.failure('3');
+      }
+      if (e.statusCode == 403 || e.code == 'invalid_agency') {
+        return RegisterResult.failure('4');
+      }
       return RegisterResult.networkError();
     }
   }
@@ -196,13 +231,12 @@ class AuthService {
 
   Future<bool> resetPassword(String usernameOrEmail) async {
     try {
-      final url = Uri.https(constants.PATH, constants.ENDPOINT_PASS);
-      final data = await _api.postJson(url, body: {
-        'id': constants.ID,
-        'token': constants.TOKEN,
+      final url = Uri.https(constants.PATH, constants.ENDPOINT_V2_PASS);
+      await _api.postJsonV2(url, body: {
+        'agency_id': constants.ID,
         'username': usernameOrEmail,
       });
-      return data['http_response_code']?.toString() == '6';
+      return true;
     } on ApiException {
       return false;
     }
@@ -214,6 +248,8 @@ class AuthService {
     try {
       await OneSignal.logout();
     } catch (_) {}
+    _api.clearToken();
+    await _storage.clearJwtToken();
     await _storage.clearAll();
   }
 

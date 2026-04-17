@@ -206,6 +206,10 @@ class _QuickContactCard extends StatelessWidget {
               if (config.quickWhatsapp.isNotEmpty)
                 _contactBtn(
                   icon: Icons.chat_rounded,
+                  customIcon: SizedBox(
+                      width: 26,
+                      height: 26,
+                      child: constants.svgWhatsapp(color: const Color(0xFF1A7A3C))),
                   label: 'WhatsApp',
                   color: const Color(0xFF25D366),
                   onTap: () =>
@@ -228,6 +232,7 @@ class _QuickContactCard extends StatelessWidget {
 
   Widget _contactBtn({
     required IconData icon,
+    Widget? customIcon,
     required String label,
     required Color color,
     required VoidCallback onTap,
@@ -244,7 +249,9 @@ class _QuickContactCard extends StatelessWidget {
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(icon, color: color, size: 26),
+              child: Center(
+                child: customIcon ?? Icon(icon, color: color, size: 26),
+              ),
             ),
             const SizedBox(height: 6),
             Text(

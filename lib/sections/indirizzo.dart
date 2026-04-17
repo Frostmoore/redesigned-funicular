@@ -76,20 +76,16 @@ class _IndirizzoState extends State<Indirizzo> {
       children: [
         /*Text('LAT: ${_currentPosition?.latitude ?? ""}'),
         Text('LNG: ${_currentPosition?.longitude ?? ""}'),*/
-        ElevatedButton.icon(
-          icon: const Icon(Icons.location_city),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.my_location_rounded, size: 17),
           onPressed: _getCurrentPosition,
-          label: const Text("Dove mi Trovo"),
-          style: ButtonStyle(
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5),
-              ),
-            ),
-            backgroundColor: MaterialStateProperty.all<Color>(
-              Colors.grey.shade600,
-            ),
-            foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+          label: const Text('Rileva la mia posizione'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.black87,
+            side: BorderSide(color: Colors.grey.shade300),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
           ),
         ),
         constants.SPACER_MINIMAL,

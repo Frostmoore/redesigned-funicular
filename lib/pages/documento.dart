@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:provider/provider.dart';
 import 'package:Assidim/assets/constants.dart' as constants;
-import 'dart:convert' as convert;
+import 'package:Assidim/core/providers/app_provider.dart';
 import 'package:Assidim/sections/liberatoria.dart';
 
 class DocumentoForm extends StatefulWidget {
@@ -12,334 +13,410 @@ class DocumentoForm extends StatefulWidget {
 }
 
 class _DocumentoFormState extends State<DocumentoForm> {
-  int? selectedOption;
   final _formKey = GlobalKey<FormState>();
   final _picker = ImagePicker();
   bool isLoading = false;
-  late Future<Map> _ageData;
 
-  void initState() {
-    super.initState();
-    _ageData = getData();
-  }
-
-  // Controllers for Option 1 fields
-  TextEditingController nomeController = TextEditingController();
-  TextEditingController cognomeController = TextEditingController();
-  TextEditingController indirizzoController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController telefonoController = TextEditingController();
-  TextEditingController descrizione1Controller = TextEditingController();
+  final nomeController = TextEditingController();
+  final cognomeController = TextEditingController();
+  final indirizzoController = TextEditingController();
+  final emailController = TextEditingController();
+  final telefonoController = TextEditingController();
+  final descrizioneController = TextEditingController();
   bool privacy = false;
   XFile? documentazione;
 
-  Map<String, bool> uploadStatus = {
-    'fronteDoc': false,
-    'retroDoc': false,
-  };
+  bool get _docCaricato => documentazione != null;
 
-  Future<Map> getData() async {
-    var url = Uri.https(
-      constants.PATH,
-      constants.ENDPOINT,
-      {
-        'id': constants.ID,
-        'token': constants.TOKEN,
-      },
-    );
-    // print(url); // Remove in Production
-    var response = await http.get(url);
-    // print(response); // Remove in production
-    var responseBody = convert.jsonDecode(response.body) as Map;
-    // print(responseBody); // Remove in production
-    return responseBody;
+  @override
+  void dispose() {
+    nomeController.dispose();
+    cognomeController.dispose();
+    indirizzoController.dispose();
+    emailController.dispose();
+    telefonoController.dispose();
+    descrizioneController.dispose();
+    super.dispose();
   }
 
-  void scegliFonteECarica(String key) {
+  // ─── Helpers ─────────────────────────────────────────────────────────────
+
+  InputDecoration _inputDeco(String label) => InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: const Color(0xFFF5F6F8),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFF1A2A4A), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        ),
+      );
+
+  Widget _sectionLabel(String text) => Padding(
+        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade500,
+            letterSpacing: 1.4,
+          ),
+        ),
+      );
+
+  Widget _card(Widget child) => Card(
+        elevation: 0,
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: child,
+        ),
+      );
+
+  // ─── Image picking ────────────────────────────────────────────────────────
+
+  void _scegliFonteECarica() {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: Icon(Icons.camera_alt),
-                title: Text('Scatta con Fotocamera'),
-                onTap: () {
-                  Navigator.pop(context);
-                  pickImage(ImageSource.camera, key);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Scegli dalla Galleria'),
-                onTap: () {
-                  Navigator.pop(context);
-                  pickImage(ImageSource.gallery, key);
-                },
-              ),
-            ],
+      builder: (_) => SafeArea(
+        child: Wrap(children: [
+          ListTile(
+            leading: const Icon(Icons.camera_alt_rounded),
+            title: const Text('Scatta con Fotocamera'),
+            onTap: () {
+              Navigator.pop(context);
+              _pickImage(ImageSource.camera);
+            },
           ),
-        );
-      },
+          ListTile(
+            leading: const Icon(Icons.photo_library_rounded),
+            title: const Text('Scegli dalla Galleria'),
+            onTap: () {
+              Navigator.pop(context);
+              _pickImage(ImageSource.gallery);
+            },
+          ),
+        ]),
+      ),
     );
   }
 
-  void pickImage(ImageSource source, String key) async {
+  void _pickImage(ImageSource source) async {
     final pickedFile = await _picker.pickImage(source: source);
-    setState(() {
-      if (key == 'documentazione') {
-        documentazione = pickedFile;
-      }
-      uploadStatus[key] = pickedFile != null;
-    });
+    setState(() => documentazione = pickedFile);
   }
 
+  // ─── Submit ───────────────────────────────────────────────────────────────
+
   Future<void> submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      if (uploadStatus['documentazione'] == true) {
-        setState(() {
-          isLoading = true;
-        });
+    if (!_formKey.currentState!.validate()) return;
 
-        final requestData;
+    if (!_docCaricato) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Carica il documento necessario prima di inviare.')),
+      );
+      return;
+    }
 
-        requestData = {
-          'id': constants.ID,
-          'nome': nomeController.text,
-          'cognome': cognomeController.text,
-          'indirizzo': indirizzoController.text,
-          'email': emailController.text,
-          'telefono': telefonoController.text,
-          'privacy': privacy,
-          'descrizione': descrizione1Controller.text,
-        };
+    setState(() => isLoading = true);
 
-        final request = http.MultipartRequest(
-          'POST',
-          Uri.parse('https://www.hybridandgogsv.it/res/api/v1/documento.php'),
+    final provider = context.read<AppProvider>();
+    final requestData = {
+      'nome': nomeController.text,
+      'cognome': cognomeController.text,
+      'indirizzo': indirizzoController.text,
+      'email': emailController.text,
+      'telefono': telefonoController.text,
+      'privacy': privacy,
+      'descrizione': descrizioneController.text,
+    };
+
+    final url = Uri.parse(
+        'https://${constants.PATH}${constants.ENDPOINT_V2_DOCUMENTO}');
+
+    final files = <http.MultipartFile>[];
+    if (documentazione != null) {
+      files.add(await http.MultipartFile.fromPath(
+          'documentazione', documentazione!.path));
+    }
+
+    try {
+      final response = await provider.apiService.postMultipartV2(
+        url,
+        fields: {'data': jsonEncode(requestData)},
+        files: files,
+      );
+      setState(() => isLoading = false);
+      if (!mounted) return;
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        await response.stream.drain<void>();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dati inviati con successo!')),
         );
-
-        request.fields['data'] = jsonEncode(requestData);
-
-        if (documentazione != null) {
-          request.files.add(await http.MultipartFile.fromPath(
-              'documentazione', documentazione!.path));
-        }
-
-        final response = await request.send();
-
-        setState(() {
-          isLoading = false;
-        });
-
-        if (response.statusCode == 200) {
-          await response.stream.drain<void>();;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Dati inviati con successo!')),
-          );
-          Navigator.of(context).pop();
-        } else {
-          // Handle error
-          // print('Error: ${response.statusCode}');
-          // print(await response.stream.bytesToString());
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Errore nell\'invio dei dati!')),
-          );
-        }
+        Navigator.of(context).pop();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Carica i documenti necessari e accetta la Liberatoria Privacy!')),
+          const SnackBar(content: Text('Errore nell\'invio dei dati!')),
+        );
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Errore: $e')),
         );
       }
     }
   }
 
+  // ─── Build ────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Invio Documenti')),
+      backgroundColor: const Color(0xFFF5F6F8),
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Invio Documenti'),
+        elevation: 0,
+      ),
       body: isLoading
           ? Center(
               child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                      constants.COLORE_PRINCIPALE)),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    constants.COLORE_PRINCIPALE),
+              ),
             )
           : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _buildOption1Form(),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                  'Acconsento al trattamento dei miei dati personali, così come esposto nella liberatoria Privacy'),
-                            ),
-                            Checkbox(
-                              value: privacy,
-                              onChanged: (value) =>
-                                  setState(() => privacy = value!),
-                            ),
-                          ],
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionLabel('DATI PERSONALI'),
+                    _card(_buildCampiPersonali()),
+                    _sectionLabel('DOCUMENTO'),
+                    _card(_buildUploadSection()),
+                    _sectionLabel('PRIVACY'),
+                    _card(_buildPrivacySection()),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: submitForm,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromARGB(255, 12, 68, 22),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          elevation: 0,
                         ),
-                        _liberatoria(),
-                        ElevatedButton(
-                          onPressed: submitForm,
-                          style: constants.STILE_BOTTONE_ALT,
-                          child: Text('Invia il Modulo'),
+                        child: const Text(
+                          'Invia il Modulo',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
-                        constants.SPACER,
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
     );
   }
 
-  Widget _buildOption1Form() {
-    return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Text(
-              "Dati dell'Interessato",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              "Compila con i dati dell'interessato",
-              style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-            ),
-            constants.SPACER_MEDIUM,
-            TextFormField(
-              controller: nomeController,
-              decoration: InputDecoration(labelText: 'Nome'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: cognomeController,
-              decoration: InputDecoration(labelText: 'Cognome'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: indirizzoController,
-              decoration: InputDecoration(labelText: 'Indirizzo'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: telefonoController,
-              decoration: InputDecoration(labelText: 'Telefono'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: descrizione1Controller,
-              decoration:
-                  InputDecoration(labelText: 'Descrizione del Documento'),
-              maxLines: 8,
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            constants.SPACER,
-            Text(
-              "Sezione Documenti",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+  Widget _buildCampiPersonali() => Column(
+        children: [
+          TextFormField(
+            controller: nomeController,
+            decoration: _inputDeco('Nome'),
+            validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: cognomeController,
+            decoration: _inputDeco('Cognome'),
+            validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: indirizzoController,
+            decoration: _inputDeco('Indirizzo'),
+            validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: _inputDeco('Email'),
+            validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: telefonoController,
+            keyboardType: TextInputType.phone,
+            decoration: _inputDeco('Telefono'),
+            validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: descrizioneController,
+            decoration: _inputDeco('Descrizione del Documento'),
+            maxLines: 5,
+            validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+          ),
+        ],
+      );
+
+  Widget _buildUploadSection() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Carica il file del documento da inviare.',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 14),
+          GestureDetector(
+            onTap: _scegliFonteECarica,
+            child: Container(
+              decoration: BoxDecoration(
+                color: _docCaricato
+                    ? Colors.green.withValues(alpha: 0.04)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _docCaricato
+                      ? Colors.green.shade200
+                      : Colors.grey.shade200,
+                ),
+              ),
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _docCaricato
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    _docCaricato
+                        ? Icons.check_rounded
+                        : Icons.upload_file_rounded,
+                    color: _docCaricato
+                        ? Colors.green
+                        : Colors.grey.shade500,
+                  ),
+                ),
+                title: Text(
+                  _docCaricato ? 'File caricato' : 'Carica Documentazione',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color:
+                        _docCaricato ? Colors.green.shade700 : Colors.black87,
+                  ),
+                ),
+                trailing: _docCaricato
+                    ? const Icon(Icons.check_circle_rounded,
+                        color: Colors.green)
+                    : Icon(Icons.add_rounded, color: Colors.grey.shade400),
               ),
             ),
-            Text(
-              "Ricordati di caricare file leggibili",
-              style: TextStyle(
-                fontSize: 13,
-                fontStyle: FontStyle.italic,
+          ),
+        ],
+      );
+
+  Widget _buildPrivacySection() => Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: const Text(
+                  'Acconsento al trattamento dei miei dati personali, '
+                  'così come esposto nella liberatoria Privacy.',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
+              Checkbox(
+                value: privacy,
+                activeColor: const Color.fromARGB(255, 12, 68, 22),
+                onChanged: (v) => setState(() => privacy = v!),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _showLiberatoria(context),
+              icon: const Icon(Icons.info_outline_rounded, size: 18),
+              label: const Text('Leggi la Liberatoria Privacy'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.grey.shade700,
+                side: BorderSide(color: Colors.grey.shade300),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
-            ElevatedButton(
-              onPressed: () => scegliFonteECarica('documentazione'),
-              child: Text(documentazione == null
-                  ? 'Carica Documentazione'
-                  : 'File Caricato'),
+          ),
+        ],
+      );
+
+  void _showLiberatoria(BuildContext context) {
+    final config = context.read<AppProvider>().config!;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Theme(
+        data: Theme.of(ctx).copyWith(dialogBackgroundColor: Colors.white),
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          title: const Text('Informativa Privacy'),
+          content: Liberatoria(config: config),
+          actions: [
+            TextButton(
               style: constants.STILE_BOTTONE,
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Chiudi'),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Widget _liberatoria() {
-    return FutureBuilder(
-      future: _ageData,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: constants.COLORE_PRINCIPALE,
-            ),
-          );
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Errore: ${snapshot.error}'));
-        } else if (!snapshot.hasData) {
-          return Center(child: Text('Nessun dato disponibile'));
-        } else {
-          return Column(
-            children: [
-              ElevatedButton(
-                onPressed: () => _dialogBuilder(context, snapshot.data),
-                child: Text("Vedi la Liberatoria Privacy"),
-              ),
-              constants.SPACER,
-            ],
-          );
-        }
-      },
-    );
-  }
-
-  Future<void> _dialogBuilder(BuildContext context, data) {
-    return showDialog<void>(
-        context: context,
-        builder: (BuildContext context) {
-          return Theme(
-            data:
-                Theme.of(context).copyWith(dialogBackgroundColor: Colors.white),
-            child: AlertDialog(
-              backgroundColor: Colors.white,
-              surfaceTintColor: Colors.white,
-              title: const Text("Informativa Privacy"),
-              content: Liberatoria(data: data),
-              actions: <Widget>[
-                TextButton(
-                  style: constants.STILE_BOTTONE,
-                  child: const Text("Chiudi"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                )
-              ],
-            ),
-          );
-        });
   }
 }

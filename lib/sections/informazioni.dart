@@ -28,96 +28,121 @@ class _SedeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final terziario = config.tertiaryColor;
-    final secondario = config.secondaryColor;
-
     return Padding(
-      padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black38),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withValues(alpha: 0.5),
-              spreadRadius: 5,
-              blurRadius: 7,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          color: const Color(0xFFF5F6F8),
+          border: Border.all(color: Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.all(16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Image(image: constants.IMAGE_BUILDING, height: 80),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: const Icon(Icons.business_rounded,
+                        color: Color(0xFF1A2A4A), size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          sede.nome,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        if (sede.indirizzo.isNotEmpty)
+                          Text(
+                            sede.indirizzo.replaceAll('\\n', ' • '),
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey.shade600),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              Text(
-                sede.nome,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
-              ),
-              Text(
-                sede.indirizzo.replaceAll('\\n', '\n'),
-                textAlign: TextAlign.center,
-              ),
-              constants.SPACER,
-              Text(
-                sede.testoOrari,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                sede.orari.replaceAll('\\n', '\n'),
-                textAlign: TextAlign.center,
-              ),
-              constants.SPACER,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (sede.telefono.isNotEmpty)
-                    _iconBtn(Icons.phone, terziario,
-                        () => constants.openUrl(Uri.parse('tel:${sede.telefono}'))),
-                  if (sede.email.isNotEmpty)
-                    _iconBtn(Icons.email, terziario,
-                        () => constants.openUrl(Uri.parse('mailto:${sede.email}'))),
-                  if (sede.mappa.isNotEmpty)
-                    _iconBtn(Icons.pin_drop, terziario,
-                        () => constants.openUrl(Uri.parse(sede.mappa))),
-                  if (sede.sito.isNotEmpty)
-                    _iconBtn(Icons.language, terziario,
-                        () => constants.openUrl(Uri.parse(sede.sito))),
-                ],
-              ),
-              constants.SPACER_MEDIUM,
-              if (sede.recensioni.isNotEmpty)
+              if (sede.orari.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _infoRow(
+                  Icons.schedule_rounded,
+                  sede.testoOrari.isNotEmpty ? sede.testoOrari : 'Orari',
+                  sede.orari.replaceAll('\\n', '\n'),
+                ),
+              ],
+              if ([sede.telefono, sede.email, sede.mappa, sede.sito]
+                  .any((s) => s.isNotEmpty)) ...[
+                const SizedBox(height: 12),
+                Divider(height: 1, color: Colors.grey.shade200),
+                const SizedBox(height: 14),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    ElevatedButton.icon(
-                      onPressed: () => constants.openUrl(Uri.parse(sede.recensioni)),
-                      icon: const Icon(Icons.reviews),
-                      label: const Text('Lasciaci una Recensione!'),
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.all(secondario),
-                        foregroundColor: WidgetStateProperty.all(Colors.white),
-                        shape: WidgetStateProperty.all(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        ),
+                    if (sede.telefono.isNotEmpty)
+                      _actionIcon(
+                        Icons.phone_rounded,
+                        'Chiama',
+                        const Color(0xFF34C759),
+                        () => constants.openUrl(
+                            Uri.parse('tel:${sede.telefono}')),
                       ),
-                    ),
+                    if (sede.email.isNotEmpty)
+                      _actionIcon(
+                        Icons.email_rounded,
+                        'Email',
+                        const Color(0xFF007AFF),
+                        () => constants.openUrl(
+                            Uri.parse('mailto:${sede.email}')),
+                      ),
+                    if (sede.mappa.isNotEmpty)
+                      _actionIcon(
+                        Icons.map_rounded,
+                        'Mappa',
+                        const Color(0xFFFF3B30),
+                        () => constants.openUrl(Uri.parse(sede.mappa)),
+                      ),
+                    if (sede.sito.isNotEmpty)
+                      _actionIcon(
+                        Icons.language_rounded,
+                        'Sito',
+                        const Color(0xFF5856D6),
+                        () => constants.openUrl(Uri.parse(sede.sito)),
+                      ),
                   ],
                 ),
+              ],
+              if (sede.recensioni.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        constants.openUrl(Uri.parse(sede.recensioni)),
+                    icon: const Icon(Icons.star_outline_rounded, size: 17),
+                    label: const Text('Lascia una Recensione'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey.shade700,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -125,12 +150,52 @@ class _SedeCard extends StatelessWidget {
     );
   }
 
-  Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) => IconButton(
-    icon: Icon(icon),
-    onPressed: onTap,
-    style: ButtonStyle(
-      backgroundColor: WidgetStateProperty.all(color),
-      foregroundColor: WidgetStateProperty.all(Colors.white),
-    ),
-  );
+  Widget _infoRow(IconData icon, String label, String value) => Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: Colors.grey.shade500),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.grey.shade500,
+                        letterSpacing: 0.8)),
+                const SizedBox(height: 2),
+                Text(value,
+                    style: const TextStyle(fontSize: 13, color: Colors.black87)),
+              ],
+            ),
+          ),
+        ],
+      );
+
+  Widget _actionIcon(
+          IconData icon, String label, Color color, VoidCallback onTap) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+            ),
+          ],
+        ),
+      );
 }

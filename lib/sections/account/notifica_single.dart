@@ -7,7 +7,6 @@ import 'package:Assidim/core/providers/app_provider.dart';
 
 class NotificaSingle extends StatefulWidget {
   final String id;
-
   const NotificaSingle({super.key, required this.id});
 
   @override
@@ -29,12 +28,11 @@ class _NotificaSingleState extends State<NotificaSingle> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F6F8),
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [Text('')],
-        ),
+        elevation: 0,
+        title: const Text('Comunicazione'),
       ),
       body: FutureBuilder<Notifica?>(
         future: _future,
@@ -42,57 +40,106 @@ class _NotificaSingleState extends State<NotificaSingle> {
           if (snap.connectionState != ConnectionState.done) {
             return const Center(
               child: CircularProgressIndicator(
-                color: constants.COLORE_PRINCIPALE,
-              ),
+                  color: constants.COLORE_PRINCIPALE),
             );
           }
 
           final n = snap.data;
           if (n == null) {
-            return const Center(child: Text('Nessun dato disponibile'));
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.error_outline_rounded,
+                      size: 48, color: Colors.grey.shade300),
+                  const SizedBox(height: 12),
+                  Text('Contenuto non disponibile',
+                      style: TextStyle(color: Colors.grey.shade500)),
+                ],
+              ),
+            );
           }
 
-          // Mark as read — fire and forget
+          // Mark as read – fire and forget
           context
               .read<AppProvider>()
               .notificheService
               .markAsRead(n.id, _username);
 
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (n.titolo.isNotEmpty)
-                    Text(
-                      n.titolo,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Card(
+              elevation: 0,
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey.shade200),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (n.titolo.isNotEmpty) ...[
+                      Text(
+                        n.titolo,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
                       ),
+                      const SizedBox(height: 6),
+                    ],
+                    Text(
+                      n.dataora,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade400,
+                          fontStyle: FontStyle.italic),
                     ),
-                  if (n.immagine != null && n.immagine!.isNotEmpty) ...[
-                    constants.SPACER_MEDIUM,
-                    Image.network(n.immagine!),
-                    constants.SPACER_MEDIUM,
+                    Divider(
+                        height: 24,
+                        thickness: 1,
+                        color: Colors.grey.shade100),
+                    if (n.immagine != null && n.immagine!.isNotEmpty) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          n.immagine!,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const SizedBox(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (n.contenuto.isNotEmpty)
+                      HtmlWidget(n.contenuto),
+                    if (n.link != null &&
+                        n.link!.isNotEmpty &&
+                        n.testolink != null &&
+                        n.testolink!.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              constants.openUrl(Uri.parse(n.link!)),
+                          icon: const Icon(
+                              Icons.open_in_new_rounded, size: 17),
+                          label: Text(n.testolink!),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF1A2A4A),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                  if (n.contenuto.isNotEmpty) HtmlWidget(n.contenuto),
-                  if (n.link != null &&
-                      n.link!.isNotEmpty &&
-                      n.testolink != null &&
-                      n.testolink!.isNotEmpty) ...[
-                    constants.SPACER_MEDIUM,
-                    ElevatedButton(
-                      onPressed: () =>
-                          constants.openUrl(Uri.parse(n.link!)),
-                      style: constants.STILE_BOTTONE,
-                      child: Text(n.testolink!),
-                    ),
-                    constants.SPACER_MEDIUM,
-                  ],
-                ],
+                ),
               ),
             ),
           );

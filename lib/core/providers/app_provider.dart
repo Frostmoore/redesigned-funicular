@@ -234,4 +234,6 @@ class AppProvider extends ChangeNotifier {
 
   AuthService get authService => _auth;
   AppStorage get storage => _storage;
+  ApiService get apiService => _api;
+  String? get jwtToken => _api.jwtToken;
 }

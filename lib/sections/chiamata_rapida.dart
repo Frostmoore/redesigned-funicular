@@ -10,45 +10,74 @@ class ChiamataRapida extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final config = context.watch<AppProvider>().config!;
-    final primary = config.primaryColor;
 
     return SpeedDial(
-      icon: Icons.phone,
-      backgroundColor: primary,
+      icon: Icons.phone_rounded,
+      activeIcon: Icons.close_rounded,
+      backgroundColor: const Color(0xFF1A2A4A),
+      foregroundColor: Colors.white,
+      activeBackgroundColor: const Color(0xFF1A2A4A),
+      activeForegroundColor: Colors.white,
+      buttonSize: const Size(58, 58),
+      childrenButtonSize: const Size(52, 52),
+      elevation: 6,
+      overlayColor: Colors.black,
+      overlayOpacity: 0.25,
+      spaceBetweenChildren: 10,
+      animationCurve: Curves.easeInOutCubic,
       children: [
         if (config.quickTelefono.isNotEmpty)
           SpeedDialChild(
-            child: const Icon(Icons.phone_android_outlined),
+            child: const Icon(Icons.phone_rounded, size: 22),
             foregroundColor: Colors.white,
-            backgroundColor: primary,
+            backgroundColor: const Color(0xFF34C759),
+            shape: const CircleBorder(),
             label: constants.CHIAMATA_RAPIDA_UNO,
-            shape: const CircleBorder(eccentricity: 0),
-            onTap: () => constants.openUrl(
-              Uri.parse('tel:${config.quickTelefono}'),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: Colors.black87,
             ),
+            labelBackgroundColor: Colors.white,
+            elevation: 4,
+            onTap: () =>
+                constants.openUrl(Uri.parse('tel:${config.quickTelefono}')),
           ),
         if (config.quickWhatsapp.isNotEmpty)
           SpeedDialChild(
             child: Padding(
-              padding: const EdgeInsets.all(9),
-              child: constants.svgWhatsapp(),
+              padding: const EdgeInsets.all(10),
+              child: constants.svgWhatsapp(color: Colors.white),
             ),
             foregroundColor: Colors.white,
-            backgroundColor: primary,
+            backgroundColor: const Color(0xFF25D366),
+            shape: const CircleBorder(),
             label: constants.CHIAMATA_RAPIDA_DUE,
-            shape: const CircleBorder(eccentricity: 0),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: Colors.black87,
+            ),
+            labelBackgroundColor: Colors.white,
+            elevation: 4,
             onTap: () => constants.openUrl(Uri.parse(config.quickWhatsapp)),
           ),
         if (config.quickEmail.isNotEmpty)
           SpeedDialChild(
-            child: const Icon(Icons.email),
+            child: const Icon(Icons.email_rounded, size: 22),
             foregroundColor: Colors.white,
-            backgroundColor: primary,
+            backgroundColor: const Color(0xFF007AFF),
+            shape: const CircleBorder(),
             label: constants.CHIAMATA_RAPIDA_TRE,
-            shape: const CircleBorder(eccentricity: 0),
-            onTap: () => constants.openUrl(
-              Uri.parse('mailto:${config.quickEmail}'),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: Colors.black87,
             ),
+            labelBackgroundColor: Colors.white,
+            elevation: 4,
+            onTap: () => constants.openUrl(
+                Uri.parse('mailto:${config.quickEmail}')),
           ),
       ],
     );

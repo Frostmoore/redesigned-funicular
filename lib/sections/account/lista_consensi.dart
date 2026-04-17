@@ -1,10 +1,9 @@
-// lista_consensi.dart
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:Assidim/assets/constants.dart' as constants;
 import 'package:Assidim/core/models/user_data.dart';
+import 'package:Assidim/core/providers/app_provider.dart';
+import 'package:Assidim/core/services/api_service.dart';
 
 class ListaConsensi extends StatefulWidget {
   final UserData userData;
@@ -27,25 +26,16 @@ class _ListaConsensiState extends State<ListaConsensi> {
     _p4 = parse(widget.userData.privacy4);
   }
 
-  Future<void> _save(int id, bool optimisticValue) async {
-    final url = Uri.https(constants.PATH, constants.ENDPOINT_PRIV);
-    final body = jsonEncode({
-      'id': widget.userData.id,
-      'privacyId': id.toString(),
-      'privacyStatus': optimisticValue,
-    });
-
+  Future<void> _save(int id, bool value) async {
+    final provider = context.read<AppProvider>();
+    final url = Uri.https(constants.PATH, constants.ENDPOINT_V2_PRIVACY);
     setState(() => _busy = true);
-    debugPrint('[PRIV] → $url  $body');
-
     try {
-      final res = await http.post(url,
-          headers: {'Content-Type': 'application/json'}, body: body);
-      final ok =
-          res.statusCode == 200 && (jsonDecode(res.body)['result'] == 'ok');
-      debugPrint('[PRIV] ← ${res.statusCode} ok=$ok ${res.body}');
-      if (!ok) throw Exception('save failed');
-    } catch (e) {
+      await provider.apiService.patchJsonV2(url, body: {
+        'privacy_id': id,
+        'privacy_value': value,
+      });
+    } on ApiException catch (e) {
       debugPrint('[PRIV] errore $e – rollback');
       setState(() {
         if (id == 2) _p2 = !_p2;
@@ -53,8 +43,8 @@ class _ListaConsensiState extends State<ListaConsensi> {
         if (id == 4) _p4 = !_p4;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Errore salvataggio')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Errore salvataggio')));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -62,36 +52,48 @@ class _ListaConsensiState extends State<ListaConsensi> {
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          const HtmlWidget(
-            "<h2 style='text-align:center;'>Gestione Consensi Privacy</h2>",
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_busy)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: const LinearProgressIndicator(),
           ),
-          if (_busy) const LinearProgressIndicator(),
-          constants.SPACER,
-          _row(constants.PRIVACY_2, _p2, 2),
-          constants.SPACER,
-          _row(constants.PRIVACY_3, _p3, 3),
-          constants.SPACER,
-          _row(constants.PRIVACY_4, _p4, 4),
-          constants.SPACER,
-        ],
-      );
+        if (_busy) const SizedBox(height: 8),
+        _toggle(constants.PRIVACY_2, _p2, 2),
+        Divider(height: 16, thickness: 1, color: Colors.grey.shade100),
+        _toggle(constants.PRIVACY_3, _p3, 3),
+        Divider(height: 16, thickness: 1, color: Colors.grey.shade100),
+        _toggle(constants.PRIVACY_4, _p4, 4),
+      ],
+    );
+  }
 
-  Widget _row(String label, bool value, int id) => Row(
+  Widget _toggle(String label, bool value, int id) => Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(child: Text(label)),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
+            ),
+          ),
+          const SizedBox(width: 12),
           Switch(
             value: value,
-            activeColor: constants.COLORE_PRINCIPALE,
-            onChanged: (v) {
-              setState(() {
-                if (id == 2) _p2 = v;
-                if (id == 3) _p3 = v;
-                if (id == 4) _p4 = v;
-              });
-              _save(id, v);
-            },
+            activeColor: const Color(0xFF1A2A4A),
+            onChanged: _busy
+                ? null
+                : (v) {
+                    setState(() {
+                      if (id == 2) _p2 = v;
+                      if (id == 3) _p3 = v;
+                      if (id == 4) _p4 = v;
+                    });
+                    _save(id, v);
+                  },
           ),
         ],
       );

@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:provider/provider.dart';
 import 'package:Assidim/assets/constants.dart' as constants;
-import 'dart:convert' as convert;
+import 'package:Assidim/core/providers/app_provider.dart';
 import 'package:Assidim/sections/liberatoria.dart';
 
 class SinistroForm extends StatefulWidget {
@@ -16,19 +17,11 @@ class _SinistroFormState extends State<SinistroForm> {
   final _formKey = GlobalKey<FormState>();
   final _picker = ImagePicker();
   bool isLoading = false;
-  late Future<Map> _ageData;
 
+  @override
   void initState() {
     super.initState();
-    _ageData = getData();
   }
-
-  Widget _backButton() => ElevatedButton.icon(
-        style: constants.STILE_BOTTONE,
-        onPressed: () => setState(() => selectedOption = null),
-        icon: const Icon(Icons.arrow_back),
-        label: const Text('Indietro'),
-      );
 
   // Controllers for Option 1 fields
   TextEditingController nomeController = TextEditingController();
@@ -137,73 +130,186 @@ class _SinistroFormState extends State<SinistroForm> {
     'fotoCAI': false,
     'fronteDoc': false,
     'retroDoc': false,
+    'documentazione': false,
   };
 
-  Future<Map> getData() async {
-    var url = Uri.https(
-      constants.PATH,
-      constants.ENDPOINT,
-      {
-        'id': constants.ID,
-        'token': constants.TOKEN,
-      },
+  // ─── Helpers ─────────────────────────────────────────────────────────────
+
+  InputDecoration _inputDeco(String label) => InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: const Color(0xFFF5F6F8),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFF1A2A4A), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        ),
+      );
+
+  Widget _sectionLabel(String text) => Padding(
+        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade500,
+            letterSpacing: 1.4,
+          ),
+        ),
+      );
+
+  Widget _card(Widget child) => Card(
+        elevation: 0,
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: child,
+        ),
+      );
+
+  Widget _uploadTile(String label, String key, VoidCallback onTap) {
+    final ok = uploadStatus[key] == true;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: ok ? Colors.green.withValues(alpha: 0.04) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: ok ? Colors.green.shade200 : Colors.grey.shade200,
+          ),
+        ),
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: ok
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.grey.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              ok ? Icons.check_rounded : Icons.upload_file_rounded,
+              color: ok ? Colors.green : Colors.grey.shade500,
+            ),
+          ),
+          title: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: ok ? Colors.green.shade700 : Colors.black87,
+            ),
+          ),
+          trailing: ok
+              ? const Icon(Icons.check_circle_rounded, color: Colors.green)
+              : Icon(Icons.add_rounded, color: Colors.grey.shade400),
+        ),
+      ),
     );
-    // print(url); // Remove in Production
-    var response = await http.get(url);
-    // print(response); // Remove in production
-    var responseBody = convert.jsonDecode(response.body) as Map;
-    // print(responseBody); // Remove in production
-    return responseBody;
   }
+
+  Widget _circostanzaRow(String label, String keyA, String keyB) => Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+            Row(
+              children: [
+                Checkbox(
+                  value: circostanze[keyA] ?? false,
+                  activeColor: const Color(0xFF1A2A4A),
+                  onChanged: (v) => setState(() => circostanze[keyA] = v!),
+                  visualDensity: VisualDensity.compact,
+                ),
+                const Text('Veicolo A', style: TextStyle(fontSize: 13)),
+                const SizedBox(width: 16),
+                Checkbox(
+                  value: circostanze[keyB] ?? false,
+                  activeColor: const Color(0xFF1A2A4A),
+                  onChanged: (v) => setState(() => circostanze[keyB] = v!),
+                  visualDensity: VisualDensity.compact,
+                ),
+                const Text('Veicolo B', style: TextStyle(fontSize: 13)),
+              ],
+            ),
+            Divider(height: 1, color: Colors.grey.shade100),
+          ],
+        ),
+      );
+
+  // ─── Image picking ────────────────────────────────────────────────────────
 
   void scegliFonteECarica(String key) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: Icon(Icons.camera_alt),
-                title: Text('Scatta con Fotocamera'),
-                onTap: () {
-                  Navigator.pop(context);
-                  pickImage(ImageSource.camera, key);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Scegli dalla Galleria'),
-                onTap: () {
-                  Navigator.pop(context);
-                  pickImage(ImageSource.gallery, key);
-                },
-              ),
-            ],
+      builder: (_) => SafeArea(
+        child: Wrap(children: [
+          ListTile(
+            leading: const Icon(Icons.camera_alt_rounded),
+            title: const Text('Scatta con Fotocamera'),
+            onTap: () {
+              Navigator.pop(context);
+              pickImage(ImageSource.camera, key);
+            },
           ),
-        );
-      },
+          ListTile(
+            leading: const Icon(Icons.photo_library_rounded),
+            title: const Text('Scegli dalla Galleria'),
+            onTap: () {
+              Navigator.pop(context);
+              pickImage(ImageSource.gallery, key);
+            },
+          ),
+        ]),
+      ),
     );
   }
 
   void pickImage(ImageSource source, String key) async {
     final pickedFile = await _picker.pickImage(source: source);
     setState(() {
-      if (key == 'fotoCAI') {
-        fotoCAI = pickedFile;
-      } else if (key == 'fronteDoc') {
-        fronteDoc = pickedFile;
-      } else if (key == 'retroDoc') {
-        retroDoc = pickedFile;
-      } else if (key == 'documentazione') {
-        documentazione = pickedFile;
-      }
+      if (key == 'fotoCAI') fotoCAI = pickedFile;
+      if (key == 'fronteDoc') fronteDoc = pickedFile;
+      if (key == 'retroDoc') retroDoc = pickedFile;
+      if (key == 'documentazione') documentazione = pickedFile;
       uploadStatus[key] = pickedFile != null;
     });
   }
+
+  // ─── Date pickers ─────────────────────────────────────────────────────────
 
   Future<void> _selectDateTime(BuildContext context) async {
     final DateTime? date = await showDatePicker(
@@ -212,19 +318,17 @@ class _SinistroFormState extends State<SinistroForm> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-
     if (date != null) {
       final TimeOfDay? time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(DateTime.now()),
       );
-
       if (time != null) {
         setState(() {
-          dataOraIncidente =
-              DateTime(date.year, date.month, date.day, time.hour, time.minute);
+          dataOraIncidente = DateTime(
+              date.year, date.month, date.day, time.hour, time.minute);
           dataOraIncidenteController.text =
-              "${dataOraIncidente!.day}/${dataOraIncidente!.month}/${dataOraIncidente!.year} ${dataOraIncidente!.hour}:${dataOraIncidente!.minute}";
+              '${dataOraIncidente!.day}/${dataOraIncidente!.month}/${dataOraIncidente!.year} ${dataOraIncidente!.hour}:${dataOraIncidente!.minute}';
         });
       }
     }
@@ -239,11 +343,10 @@ class _SinistroFormState extends State<SinistroForm> {
       firstDate: DateTime(1900),
       lastDate: DateTime(2101),
     );
-
     if (date != null) {
       setState(() {
         onDateSelected(date);
-        controller.text = "${date.day}/${date.month}/${date.year}";
+        controller.text = '${date.day}/${date.month}/${date.year}';
       });
     }
   }
@@ -257,11 +360,10 @@ class _SinistroFormState extends State<SinistroForm> {
       firstDate: DateTime(1900),
       lastDate: DateTime(2101),
     );
-
     if (date != null) {
       setState(() {
         onDateSelected(date);
-        controller.text = "${date.day}/${date.month}/${date.year}";
+        controller.text = '${date.day}/${date.month}/${date.year}';
       });
     }
   }
@@ -275,28 +377,27 @@ class _SinistroFormState extends State<SinistroForm> {
       firstDate: DateTime(1900),
       lastDate: DateTime(2101),
     );
-
     if (date != null) {
       setState(() {
         onDateSelected(date);
-        controller.text = "${date.day}/${date.month}/${date.year}";
+        controller.text = '${date.day}/${date.month}/${date.year}';
       });
     }
   }
+
+  // ─── Submit ───────────────────────────────────────────────────────────────
 
   Future<void> submitForm() async {
     if (_formKey.currentState!.validate()) {
       if (uploadStatus['fronteDoc'] == true &&
           uploadStatus['retroDoc'] == true) {
-        setState(() {
-          isLoading = true;
-        });
+        final provider = context.read<AppProvider>();
+        setState(() => isLoading = true);
 
-        final requestData;
+        final Map<String, dynamic> requestData;
 
         if (selectedOption == 1) {
           requestData = {
-            'id': constants.ID,
             'option': 1,
             'nome': nomeController.text,
             'cognome': cognomeController.text,
@@ -309,7 +410,6 @@ class _SinistroFormState extends State<SinistroForm> {
           };
         } else if (selectedOption == 2) {
           requestData = {
-            'id': constants.ID,
             'option': 2,
             'dataOraIncidente': dataOraIncidente?.toIso8601String(),
             'luogoIncidente': luogoIncidenteController.text,
@@ -350,7 +450,6 @@ class _SinistroFormState extends State<SinistroForm> {
           };
         } else {
           requestData = {
-            'id': constants.ID,
             'option': 3,
             'nome': nome3Controller.text,
             'cognome': cognome3Controller.text,
@@ -363,160 +462,139 @@ class _SinistroFormState extends State<SinistroForm> {
           };
         }
 
-        final request = http.MultipartRequest(
-          'POST',
-          Uri.parse('https://www.hybridandgogsv.it/res/api/v1/sinistro.php'),
-        );
+        final url = Uri.parse(
+            'https://${constants.PATH}${constants.ENDPOINT_V2_SINISTRO}');
 
-        request.fields['data'] = jsonEncode(requestData);
-
+        final files = <http.MultipartFile>[];
         if (fotoCAI != null) {
-          request.files
-              .add(await http.MultipartFile.fromPath('fotoCAI', fotoCAI!.path));
+          files.add(
+              await http.MultipartFile.fromPath('fotoCAI', fotoCAI!.path));
         }
-
         if (fronteDoc != null) {
-          request.files.add(
+          files.add(
               await http.MultipartFile.fromPath('fronteDoc', fronteDoc!.path));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Carica la foto del documento!')),
-          );
         }
-
         if (retroDoc != null) {
-          request.files.add(
+          files.add(
               await http.MultipartFile.fromPath('retroDoc', retroDoc!.path));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Carica la foto del documento!')),
-          );
         }
-
         if (documentazione != null) {
-          request.files.add(await http.MultipartFile.fromPath(
+          files.add(await http.MultipartFile.fromPath(
               'documentazione', documentazione!.path));
         }
 
-        final response = await request.send();
-
-        setState(() {
-          isLoading = false;
-        });
-
-        if (response.statusCode == 200) {
-          final responseData = await response.stream.bytesToString();
-          print(responseData);
-;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Dati inviati con successo!')),
+        try {
+          final response = await provider.apiService.postMultipartV2(
+            url,
+            fields: {'data': jsonEncode(requestData)},
+            files: files,
           );
-          Navigator.of(context).pop();
-        } else {
-          // Handle error
-          // print('Error: ${response.statusCode}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Errore nell\'invio dei dati!')),
-          );
+          setState(() => isLoading = false);
+          if (!mounted) return;
+
+          if (response.statusCode == 201 || response.statusCode == 200) {
+            await response.stream.drain<void>();
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Dati inviati con successo!')),
+            );
+            Navigator.of(context).pop();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Errore nell\'invio dei dati!')),
+            );
+          }
+        } catch (e) {
+          setState(() => isLoading = false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Errore: $e')),
+            );
+          }
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Carica le foto dei documenti e accetta la Liberatoria Privacy!')),
+          const SnackBar(
+              content:
+                  Text('Carica le foto dei documenti prima di inviare.')),
         );
       }
+    }
+  }
+
+  // ─── Build ────────────────────────────────────────────────────────────────
+
+  String get _appBarTitle {
+    switch (selectedOption) {
+      case 1:
+        return 'Auto – Modulo CAI';
+      case 2:
+        return 'Auto – Senza CAI';
+      case 3:
+        return 'Sinistro NON-Auto';
+      default:
+        return 'Modulo Sinistro';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Modulo Sinistro')),
+      backgroundColor: const Color(0xFFF5F6F8),
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 0,
+        title: Text(_appBarTitle),
+        leading: selectedOption != null
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => setState(() => selectedOption = null),
+              )
+            : null,
+      ),
       body: isLoading
           ? Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation(constants.COLORE_PRINCIPALE),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    constants.COLORE_PRINCIPALE),
               ),
             )
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center, //  ◀️ centrato
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 3 bottoni iniziali
-                    if (selectedOption == null) // 👈 schermata iniziale
-                      SizedBox(
-                        // ⬅️ riempie lo schermo
-                        height: MediaQuery.of(context)
-                                .size
-                                .height // altezza intera finestra
-                            -
-                            kToolbarHeight // meno AppBar
-                            -
-                            32, // meno padding esterno
-                        width: MediaQuery.of(context).size.width,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment
-                              .center, // ↕️ centratura verticale
-                          crossAxisAlignment:
-                              CrossAxisAlignment.center, // ↔️ centratura orizz.
-                          children: [
-                            ElevatedButton(
-                              onPressed: () =>
-                                  setState(() => selectedOption = 1),
-                              style: constants.STILE_BOTTONE,
-                              child: const Text('Auto – ho il modulo CAI'),
-                            ),
-                            constants.SPACER,
-                            ElevatedButton(
-                              onPressed: () =>
-                                  setState(() => selectedOption = 2),
-                              style: constants.STILE_BOTTONE,
-                              child: const Text('Auto – NESSUN modulo CAI'),
-                            ),
-                            constants.SPACER,
-                            ElevatedButton(
-                              onPressed: () =>
-                                  setState(() => selectedOption = 3),
-                              style: constants.STILE_BOTTONE,
-                              child: const Text('Sinistro NON-Auto'),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // form + tasto indietro
+                    if (selectedOption == null) _buildOptionSelection(),
                     if (selectedOption != null) ...[
-                      Center(child: _backButton()), // ◀️ centrato
-                      constants.SPACER,
                       if (selectedOption == 1) _buildOption1Form(),
                       if (selectedOption == 2) _buildOption2Form(),
                       if (selectedOption == 3) _buildOption3Form(),
-                      constants.SPACER,
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Acconsento al trattamento dei miei dati personali, '
-                              'così come esposto nella liberatoria Privacy',
-                            ),
+                      _sectionLabel('PRIVACY'),
+                      _card(_buildPrivacySection()),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: submitForm,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 12, 68, 22),
+                            foregroundColor: Colors.white,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
                           ),
-                          Checkbox(
-                            value: privacy,
-                            onChanged: (v) => setState(() => privacy = v!),
+                          child: const Text(
+                            'Invia il Modulo',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
-                        ],
+                        ),
                       ),
-                      _liberatoria(),
-                      ElevatedButton(
-                        onPressed: submitForm,
-                        style: constants.STILE_BOTTONE_ALT,
-                        child: const Text('Invia il Modulo'),
-                      ),
-                      constants.SPACER,
                     ],
                   ],
                 ),
@@ -525,1003 +603,577 @@ class _SinistroFormState extends State<SinistroForm> {
     );
   }
 
-  Widget _buildOption1Form() {
-    return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Text(
-              "Dati dell'Interessato",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              "Compila con i dati dell'interessato",
-              style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-            ),
-            constants.SPACER_MEDIUM,
-            TextFormField(
-              controller: nomeController,
-              decoration: InputDecoration(labelText: 'Nome'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: cognomeController,
-              decoration: InputDecoration(labelText: 'Cognome'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: indirizzoController,
-              decoration: InputDecoration(labelText: 'Indirizzo'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: telefonoController,
-              decoration: InputDecoration(labelText: 'Telefono'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: dataIncidente3Controller,
-              readOnly: true,
-              onTap: () => _selectDateTimeSinistro(context,
-                  controller: dataIncidente3Controller,
-                  onDateSelected: (date) => dataIncidente3 = date),
-              decoration: InputDecoration(labelText: 'Data del Sinistro'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: descrizione1Controller,
-              decoration:
-                  InputDecoration(labelText: 'Descrizione del Sinistro'),
-              maxLines: 8,
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            constants.SPACER,
-            Text(
-              "Sezione Documenti",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+  // ─── Option selection screen ──────────────────────────────────────────────
+
+  Widget _buildOptionSelection() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel('TIPO DI SINISTRO'),
+          _optionCard(
+            1,
+            Icons.article_rounded,
+            'Auto – Ho il modulo CAI',
+            'Hai il modulo di constatazione amichevole compilato',
+          ),
+          const SizedBox(height: 10),
+          _optionCard(
+            2,
+            Icons.car_crash_rounded,
+            'Auto – Senza modulo CAI',
+            'Incidente senza constatazione amichevole',
+          ),
+          const SizedBox(height: 10),
+          _optionCard(
+            3,
+            Icons.personal_injury_rounded,
+            'Sinistro NON-Auto',
+            'Sinistro che non riguarda veicoli a motore',
+          ),
+        ],
+      );
+
+  Widget _optionCard(
+      int option, IconData icon, String title, String subtitle) {
+    return GestureDetector(
+      onTap: () => setState(() => selectedOption = option),
+      child: Card(
+        elevation: 0,
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A2A4A).withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon,
+                    color: const Color(0xFF1A2A4A), size: 24),
               ),
-            ),
-            Text(
-              "Ricordati di caricare foto LEGGIBILI di tutti i documenti richiesti",
-              style: TextStyle(
-                fontSize: 13,
-                fontStyle: FontStyle.italic,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                          fontSize: 12, color: Colors.grey.shade500),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            ElevatedButton(
-              onPressed: () => scegliFonteECarica('fotoCAI'),
-              style: constants.STILE_BOTTONE,
-              child: Column(
-                children: [
-                  Text('Carica Foto Modulo CAI'),
-                  if (uploadStatus['fotoCAI'] == true)
-                    Text('Caricato', style: TextStyle(color: Colors.green)),
-                ],
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => scegliFonteECarica('fronteDoc'),
-              style: constants.STILE_BOTTONE,
-              child: Column(
-                children: [
-                  Text('Carica Fronte Documento di Identità'),
-                  if (uploadStatus['fronteDoc'] == true)
-                    Text('Caricato', style: TextStyle(color: Colors.green)),
-                ],
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => scegliFonteECarica('retroDoc'),
-              style: constants.STILE_BOTTONE,
-              child: Column(
-                children: [
-                  Text('Carica Retro Documento di Identità'),
-                  if (uploadStatus['retroDoc'] == true)
-                    Text('Caricato', style: TextStyle(color: Colors.green)),
-                ],
-              ),
-            ),
-          ],
+              Icon(Icons.chevron_right_rounded,
+                  color: Colors.grey.shade400),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildOption2Form() {
-    return Center(
-      child: Column(
+  // ─── Option 1 form ────────────────────────────────────────────────────────
+
+  Widget _buildOption1Form() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Sezione Dettagli Incidente",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "Compila con i dettagli dell'incidente",
-            style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-          ),
-          constants.SPACER_MEDIUM,
-          TextFormField(
-            controller: luogoIncidenteController,
-            decoration: InputDecoration(labelText: 'Luogo dell\'Incidente'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: dataOraIncidenteController,
-            readOnly: true,
-            onTap: () => _selectDateTime(context),
-            decoration:
-                InputDecoration(labelText: 'Data e Ora dell\'Incidente'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          CheckboxListTile(
-            title: Text('Feriti'),
-            value: feriti,
-            onChanged: (value) => setState(() => feriti = value!),
-          ),
-          TextFormField(
-            controller: descrizione2Controller,
-            decoration: InputDecoration(labelText: 'Descrizione del Sinistro'),
-            maxLines: 8,
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          constants.SPACER,
-          Text(
-            "Sezione Dettagli Contraente / Assicurato Veicolo A",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "Compila con i dettagli del Contraente / Assicurato del Veicolo A",
-            style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-          ),
-          constants.SPACER_MEDIUM,
-          TextFormField(
-            controller: cognomeAController,
-            decoration: InputDecoration(labelText: 'Cognome'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: nomeAController,
-            decoration: InputDecoration(labelText: 'Nome'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: codiceFiscaleAController,
-            decoration:
-                InputDecoration(labelText: 'Codice Fiscale o Partita IVA'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: indirizzoAController,
-            decoration: InputDecoration(labelText: 'Indirizzo'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: capAController,
-            decoration: InputDecoration(labelText: 'CAP'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: statoAController,
-            decoration: InputDecoration(labelText: 'Stato'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: telefonoAController,
-            decoration: InputDecoration(labelText: 'Telefono'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: emailAController,
-            decoration: InputDecoration(labelText: 'Email'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          constants.SPACER,
-          Text(
-            "Sezione Dettagli Veicolo A",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "Compila con i dettagli del Veicolo A",
-            style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-          ),
-          constants.SPACER_MEDIUM,
-          TextFormField(
-            controller: marcaVeicoloAController,
-            decoration: InputDecoration(labelText: 'Marca e Modello'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: targaTelaioAController,
-            decoration: InputDecoration(labelText: 'N. di Targa o Telaio'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: statoImmatricolazioneController,
-            decoration: InputDecoration(labelText: 'Stato di Immatricolazione'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          constants.SPACER,
-          Text(
-            "Sezione Dettagli Conducente Veicolo A",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "Compila con i dettagli del Conducente del Veicolo A",
-            style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-          ),
-          constants.SPACER_MEDIUM,
-          TextFormField(
-            controller: cognomeConducenteController,
-            decoration: InputDecoration(labelText: 'Cognome'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: nomeConducenteController,
-            decoration: InputDecoration(labelText: 'Nome'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: dataNascitaConducenteController,
-            readOnly: true,
-            onTap: () => _selectDateTimeBirth(context,
+          _sectionLabel('DATI DELL\'INTERESSATO'),
+          _card(Column(
+            children: [
+              TextFormField(
+                controller: nomeController,
+                decoration: _inputDeco('Nome'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: cognomeController,
+                decoration: _inputDeco('Cognome'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: indirizzoController,
+                decoration: _inputDeco('Indirizzo'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: _inputDeco('Email'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: telefonoController,
+                keyboardType: TextInputType.phone,
+                decoration: _inputDeco('Telefono'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: dataIncidente3Controller,
+                readOnly: true,
+                onTap: () => _selectDateTimeSinistro(context,
+                    controller: dataIncidente3Controller,
+                    onDateSelected: (date) => dataIncidente3 = date),
+                decoration: _inputDeco('Data del Sinistro'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: descrizione1Controller,
+                decoration: _inputDeco('Descrizione del Sinistro'),
+                maxLines: 5,
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+            ],
+          )),
+          _sectionLabel('DOCUMENTI'),
+          _card(Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Carica foto leggibili di tutti i documenti richiesti.',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 14),
+              _uploadTile('Foto Modulo CAI', 'fotoCAI',
+                  () => scegliFonteECarica('fotoCAI')),
+              _uploadTile('Fronte Documento di Identità', 'fronteDoc',
+                  () => scegliFonteECarica('fronteDoc')),
+              _uploadTile('Retro Documento di Identità', 'retroDoc',
+                  () => scegliFonteECarica('retroDoc')),
+            ],
+          )),
+        ],
+      );
+
+  // ─── Option 2 form ────────────────────────────────────────────────────────
+
+  Widget _buildOption2Form() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel('DETTAGLI INCIDENTE'),
+          _card(Column(
+            children: [
+              TextFormField(
+                controller: luogoIncidenteController,
+                decoration: _inputDeco('Luogo dell\'Incidente'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: dataOraIncidenteController,
+                readOnly: true,
+                onTap: () => _selectDateTime(context),
+                decoration: _inputDeco('Data e Ora dell\'Incidente'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: descrizione2Controller,
+                decoration: _inputDeco('Descrizione del Sinistro'),
+                maxLines: 5,
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Checkbox(
+                    value: feriti,
+                    activeColor: const Color(0xFF1A2A4A),
+                    onChanged: (v) => setState(() => feriti = v!),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  const Text('Ci sono feriti',
+                      style: TextStyle(fontSize: 14)),
+                ],
+              ),
+            ],
+          )),
+          _sectionLabel('CONTRAENTE / ASSICURATO VEICOLO A'),
+          _card(Column(
+            children: [
+              TextFormField(
+                controller: cognomeAController,
+                decoration: _inputDeco('Cognome'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: nomeAController,
+                decoration: _inputDeco('Nome'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: codiceFiscaleAController,
+                decoration: _inputDeco('Codice Fiscale o Partita IVA'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: indirizzoAController,
+                decoration: _inputDeco('Indirizzo'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: capAController,
+                decoration: _inputDeco('CAP'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: statoAController,
+                decoration: _inputDeco('Stato'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: telefonoAController,
+                keyboardType: TextInputType.phone,
+                decoration: _inputDeco('Telefono'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: emailAController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: _inputDeco('Email'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+            ],
+          )),
+          _sectionLabel('VEICOLO A'),
+          _card(Column(
+            children: [
+              TextFormField(
+                controller: marcaVeicoloAController,
+                decoration: _inputDeco('Marca e Modello'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: targaTelaioAController,
+                decoration: _inputDeco('N. di Targa o Telaio'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: statoImmatricolazioneController,
+                decoration: _inputDeco('Stato di Immatricolazione'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+            ],
+          )),
+          _sectionLabel('CONDUCENTE VEICOLO A'),
+          _card(Column(
+            children: [
+              TextFormField(
+                controller: cognomeConducenteController,
+                decoration: _inputDeco('Cognome'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: nomeConducenteController,
+                decoration: _inputDeco('Nome'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
                 controller: dataNascitaConducenteController,
-                onDateSelected: (date) => dataNascitaConducente = date),
-            decoration:
-                InputDecoration(labelText: 'Data di Nascita del Conducente'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: codiceFiscaleConducenteController,
-            decoration: InputDecoration(labelText: 'Codice Fiscale'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: indirizzoConducenteController,
-            decoration: InputDecoration(labelText: 'Indirizzo'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: capConducenteController,
-            decoration: InputDecoration(labelText: 'CAP'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: telefonoConducenteController,
-            decoration: InputDecoration(labelText: 'Telefono'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: numeroPatenteController,
-            decoration: InputDecoration(labelText: 'N. Patente'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: categoriaPatenteController,
-            decoration:
-                InputDecoration(labelText: 'Categoria Patente (A, B...)'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          TextFormField(
-            controller: validitaPatenteController,
-            readOnly: true,
-            onTap: () => _selectDateTimeLicense(context,
+                readOnly: true,
+                onTap: () => _selectDateTimeBirth(context,
+                    controller: dataNascitaConducenteController,
+                    onDateSelected: (date) => dataNascitaConducente = date),
+                decoration: _inputDeco('Data di Nascita'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: codiceFiscaleConducenteController,
+                decoration: _inputDeco('Codice Fiscale'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: indirizzoConducenteController,
+                decoration: _inputDeco('Indirizzo'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: capConducenteController,
+                decoration: _inputDeco('CAP'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: telefonoConducenteController,
+                keyboardType: TextInputType.phone,
+                decoration: _inputDeco('Telefono'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: numeroPatenteController,
+                decoration: _inputDeco('N. Patente'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: categoriaPatenteController,
+                decoration: _inputDeco('Categoria Patente (A, B...)'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
                 controller: validitaPatenteController,
-                onDateSelected: (date) => dataNascitaConducente = date),
-            decoration: InputDecoration(labelText: 'Data Validità Patente'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          constants.SPACER,
-          Text(
-            "Sezione Dettagli Veicolo B",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "Compila con i dettagli del Veicolo B",
-            style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-          ),
-          constants.SPACER_MEDIUM,
-          TextFormField(
+                readOnly: true,
+                onTap: () => _selectDateTimeLicense(context,
+                    controller: validitaPatenteController,
+                    onDateSelected: (date) => validitaPatente = date),
+                decoration: _inputDeco('Data Validità Patente'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+            ],
+          )),
+          _sectionLabel('VEICOLO B'),
+          _card(TextFormField(
             controller: targaTelaioBController,
-            decoration: InputDecoration(labelText: 'N. di Targa o Telaio'),
-            validator: (value) => value!.isEmpty ? 'Campo obbligatorio' : null,
-          ),
-          constants.SPACER,
-          constants.SPACER,
-          Text(
-            "Sezione Circostanze dell'Incidente",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "Seleziona se e quale veicolo era in una delle seguenti circostanze:",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-          constants.SPACER,
-          Text(
-            "Era in Fermata o in Sosta",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            decoration: _inputDeco('N. di Targa o Telaio'),
+            validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+          )),
+          _sectionLabel('CIRCOSTANZE DELL\'INCIDENTE'),
+          _card(Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Veicolo A"),
+              Text(
+                'Seleziona se e quale veicolo era in una delle seguenti circostanze al momento dell\'incidente.',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 12),
+              _circostanzaRow(
+                  'Era in fermata o in sosta', 'fermataA', 'fermataB'),
+              _circostanzaRow('Ripartiva dopo sosta o apriva portiera',
+                  'ripartenzaA', 'ripartenzaB'),
+              _circostanzaRow(
+                  'Stava parcheggiando', 'parcheggioA', 'parcheggioB'),
+              _circostanzaRow(
+                  'Usciva da parcheggio / luogo privato / strada vicinale',
+                  'uscitaA',
+                  'uscitaB'),
+              _circostanzaRow(
+                  'Entrava in parcheggio / luogo privato / strada vicinale',
+                  'entrataA',
+                  'entrataB'),
+              _circostanzaRow('Si immetteva in piazza a senso rotatorio',
+                  'immissioneRotatoriaA', 'immissioneRotatoriaB'),
+              _circostanzaRow('Circolava su piazza a senso rotatorio',
+                  'circolazioneRotatoriaA', 'circolazioneRotatoriaB'),
+              _circostanzaRow(
+                  'Tamponava (stesso senso, stessa fila)',
+                  'tamponamentoA',
+                  'tamponamentoB'),
+              _circostanzaRow('Procedeva stesso senso, fila diversa',
+                  'filaDiversaA', 'filaDiversaB'),
+              _circostanzaRow(
+                  'Cambiava fila', 'cambioFilaA', 'cambioFilaB'),
+              _circostanzaRow('Sorpassava', 'sorpassoA', 'sorpassoB'),
+              _circostanzaRow('Girava a destra', 'destraA', 'destraB'),
+              _circostanzaRow('Girava a sinistra', 'sinistraA', 'sinistraB'),
+              _circostanzaRow(
+                  'Retrocedeva', 'retromarciaA', 'retromarciaB'),
+              _circostanzaRow(
+                  'Invadeva carreggiata in senso inverso',
+                  'contromanoA',
+                  'contromanoB'),
+              _circostanzaRow(
+                  'Proveniva da destra',
+                  'provenienzaDestraA',
+                  'provenienzaDestraB'),
+              _circostanzaRow(
+                  'Non aveva osservato segnale di precedenza / semaforo rosso',
+                  'precedenzaA',
+                  'precedenzaB'),
+            ],
+          )),
+          _sectionLabel('DOCUMENTI'),
+          _card(Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Carica foto leggibili di tutti i documenti richiesti.',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 14),
+              _uploadTile('Fronte Documento di Identità', 'fronteDoc',
+                  () => scegliFonteECarica('fronteDoc')),
+              _uploadTile('Retro Documento di Identità', 'retroDoc',
+                  () => scegliFonteECarica('retroDoc')),
+            ],
+          )),
+        ],
+      );
+
+  // ─── Option 3 form ────────────────────────────────────────────────────────
+
+  Widget _buildOption3Form() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel('DATI DELL\'INTERESSATO'),
+          _card(Column(
+            children: [
+              TextFormField(
+                controller: nome3Controller,
+                decoration: _inputDeco('Nome'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: cognome3Controller,
+                decoration: _inputDeco('Cognome'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: email3Controller,
+                keyboardType: TextInputType.emailAddress,
+                decoration: _inputDeco('Email'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: indirizzo3Controller,
+                decoration: _inputDeco('Indirizzo'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: telefono3Controller,
+                keyboardType: TextInputType.phone,
+                decoration: _inputDeco('Telefono'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: dataIncidente3Controller,
+                readOnly: true,
+                onTap: () => _selectDateTimeSinistro(context,
+                    controller: dataIncidente3Controller,
+                    onDateSelected: (date) => dataIncidente3 = date),
+                decoration: _inputDeco('Data del Sinistro'),
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: descrizione3Controller,
+                decoration: _inputDeco('Descrizione del Sinistro'),
+                maxLines: 5,
+                validator: (v) => v!.isEmpty ? 'Campo obbligatorio' : null,
+              ),
+            ],
+          )),
+          _sectionLabel('DOCUMENTI'),
+          _card(Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Carica foto leggibili di tutti i documenti richiesti.',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 14),
+              _uploadTile('Documento Rilevante', 'documentazione',
+                  () => scegliFonteECarica('documentazione')),
+              _uploadTile('Fronte Documento di Identità', 'fronteDoc',
+                  () => scegliFonteECarica('fronteDoc')),
+              _uploadTile('Retro Documento di Identità', 'retroDoc',
+                  () => scegliFonteECarica('retroDoc')),
+            ],
+          )),
+        ],
+      );
+
+  // ─── Privacy section ──────────────────────────────────────────────────────
+
+  Widget _buildPrivacySection() => Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: const Text(
+                  'Acconsento al trattamento dei miei dati personali, '
+                  'così come esposto nella liberatoria Privacy.',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
               Checkbox(
-                  value: circostanze["fermataA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["fermataA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["fermataB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["fermataB"] = value as bool;
-                    });
-                  }),
+                value: privacy,
+                activeColor: const Color.fromARGB(255, 12, 68, 22),
+                onChanged: (v) => setState(() => privacy = v!),
+              ),
             ],
           ),
-          constants.SPACER,
-          Text(
-            "Ripartiva dopo una sosta o apriva una portiera",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["ripartenzaA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["ripartenzaA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["ripartenzaB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["ripartenzaB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Stava parcheggiando",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["parcheggioA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["parcheggioA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["parcheggioB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["parcheggioB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Usciva da un parcheggio, da un luogo privato, da una strada vicinale",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["uscitaA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["uscitaA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["uscitaB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["uscitaB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Entrava in un parcheggio, in un luogo privato, in una strada vicinale",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["entrataA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["entrataA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["entrataB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["entrataB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Si immetteva in una piazza a senso rotatorio",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["immissioneRotatoriaA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["immissioneRotatoriaA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["immissioneRotatoriaB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["immissioneRotatoriaB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Circolava su una piazza a senso rotatorio",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["circolazioneRotatoriaA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["circolazioneRotatoriaA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["circolazioneRotatoriaB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["circolazioneRotatoriaB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Tamponava, procedendo nello stesso senso di marcia e nella stessa fila",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["tamponamentoA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["tamponamentoA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["tamponamentoB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["tamponamentoB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Procedeva nello stesso senso di marcia ma in una fila diversa",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["filaDiversaA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["filaDiversaA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["filaDiversaB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["filaDiversaB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Cambiava fila",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["cambioFilaA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["cambioFilaA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["cambioFilaB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["cambioFilaB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Sorpassava",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["sorpassoA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["sorpassoA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["sorpassoB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["sorpassoB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Girava a destra",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["destraA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["destraA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["destraB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["destraB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Girava a sinistra",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["sinistraA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["sinistraA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["sinistraB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["sinistraB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Retrocedeva",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["retromarciaA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["retromarciaA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["retromarciaB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["retromarciaB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Invadeva la sede stradale riservata alla circolazione in senso inverso",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["contromanoA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["contromanoA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["contromanoB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["contromanoB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Proveniva da destra",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["provenienzaDestraA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["provenienzaDestraA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["provenienzaDestraB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["provenienzaDestraB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Non aveva osservato il segnale di precedenza o di semaforo rosso",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Veicolo A"),
-              Checkbox(
-                  value: circostanze["precedenzaA"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["precedenzaA"] = value as bool;
-                    });
-                  }),
-              Text("Veicolo B"),
-              Checkbox(
-                  value: circostanze["precedenzaB"],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      circostanze["precedenzaB"] = value as bool;
-                    });
-                  }),
-            ],
-          ),
-          constants.SPACER,
-          Text(
-            "Sezione Documenti",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            "Ricordati di caricare foto LEGGIBILI di tutti i documenti richiesti",
-            style: TextStyle(
-              fontSize: 13,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => scegliFonteECarica('fronteDoc'),
-            style: constants.STILE_BOTTONE,
-            child: Column(
-              children: [
-                Text('Carica Fronte Documento di Identità'),
-                if (uploadStatus['fronteDoc'] == true)
-                  Text('Caricato', style: TextStyle(color: Colors.green)),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => scegliFonteECarica('retroDoc'),
-            style: constants.STILE_BOTTONE,
-            child: Column(
-              children: [
-                Text('Carica Retro Documento di Identità'),
-                if (uploadStatus['retroDoc'] == true)
-                  Text('Caricato', style: TextStyle(color: Colors.green)),
-              ],
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _showLiberatoria(context),
+              icon: const Icon(Icons.info_outline_rounded, size: 18),
+              label: const Text('Leggi la Liberatoria Privacy'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.grey.shade700,
+                side: BorderSide(color: Colors.grey.shade300),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
           ),
         ],
-      ),
-    );
-  }
+      );
 
-  Widget _buildOption3Form() {
-    return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Text(
-              "Dati dell'Interessato",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              "Compila con i dati dell'interessato",
-              style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-            ),
-            constants.SPACER_MEDIUM,
-            TextFormField(
-              controller: nome3Controller,
-              decoration: InputDecoration(labelText: 'Nome'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: cognome3Controller,
-              decoration: InputDecoration(labelText: 'Cognome'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: email3Controller,
-              decoration: InputDecoration(labelText: 'Email'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: indirizzo3Controller,
-              decoration: InputDecoration(labelText: 'Indirizzo'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: telefono3Controller,
-              decoration: InputDecoration(labelText: 'Telefono'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: dataIncidente3Controller,
-              readOnly: true,
-              onTap: () => _selectDateTimeSinistro(context,
-                  controller: dataIncidente3Controller,
-                  onDateSelected: (date) => dataIncidente3 = date),
-              decoration: InputDecoration(labelText: 'Data del Sinistro'),
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            TextFormField(
-              controller: descrizione3Controller,
-              decoration:
-                  InputDecoration(labelText: 'Descrizione del Sinistro'),
-              maxLines: 8,
-              validator: (value) =>
-                  value!.isEmpty ? 'Campo obbligatorio' : null,
-            ),
-            constants.SPACER,
-            Text(
-              "Sezione Documenti",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              "Ricordati di caricare foto LEGGIBILI di tutti i documenti richiesti",
-              style: TextStyle(
-                fontSize: 13,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => scegliFonteECarica('documentazione'),
+  void _showLiberatoria(BuildContext context) {
+    final config = context.read<AppProvider>().config!;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Theme(
+        data:
+            Theme.of(ctx).copyWith(dialogBackgroundColor: Colors.white),
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          title: const Text('Informativa Privacy'),
+          content: Liberatoria(config: config),
+          actions: [
+            TextButton(
               style: constants.STILE_BOTTONE,
-              child: Column(
-                children: [
-                  Text('Carica Documento rilevante per il sinistro'),
-                  if (uploadStatus['documentazione'] == true)
-                    Text('Caricato', style: TextStyle(color: Colors.green)),
-                ],
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => scegliFonteECarica('fronteDoc'),
-              style: constants.STILE_BOTTONE,
-              child: Column(
-                children: [
-                  Text('Carica Fronte Documento di Identità'),
-                  if (uploadStatus['fronteDoc'] == true)
-                    Text('Caricato', style: TextStyle(color: Colors.green)),
-                ],
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => scegliFonteECarica('retroDoc'),
-              style: constants.STILE_BOTTONE,
-              child: Column(
-                children: [
-                  Text('Carica Retro Documento di Identità'),
-                  if (uploadStatus['retroDoc'] == true)
-                    Text('Caricato', style: TextStyle(color: Colors.green)),
-                ],
-              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Chiudi'),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Widget _liberatoria() {
-    return FutureBuilder(
-      future: _ageData,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: constants.COLORE_PRINCIPALE,
-            ),
-          );
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Errore: ${snapshot.error}'));
-        } else if (!snapshot.hasData) {
-          return Center(child: Text('Nessun dato disponibile'));
-        } else {
-          return Column(
-            children: [
-              ElevatedButton(
-                onPressed: () => _dialogBuilder(context, snapshot.data),
-                child: Text("Vedi la Liberatoria Privacy"),
-              ),
-              constants.SPACER,
-            ],
-          );
-        }
-      },
-    );
-  }
-
-  Future<void> _dialogBuilder(BuildContext context, data) {
-    return showDialog<void>(
-        context: context,
-        builder: (BuildContext context) {
-          return Theme(
-            data:
-                Theme.of(context).copyWith(dialogBackgroundColor: Colors.white),
-            child: AlertDialog(
-              backgroundColor: Colors.white,
-              surfaceTintColor: Colors.white,
-              title: const Text("Informativa Privacy"),
-              content: Liberatoria(data: data),
-              actions: <Widget>[
-                TextButton(
-                  style: constants.STILE_BOTTONE,
-                  child: const Text("Chiudi"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                )
-              ],
-            ),
-          );
-        });
   }
 }

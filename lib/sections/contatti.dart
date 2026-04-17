@@ -12,6 +12,27 @@ class Contatti extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = context.watch<AppProvider>().config!;
 
+    final groups = <({String label, List<ContactEntry> entries})>[
+      if (config.numeriUtiliLabels.isNotEmpty &&
+          config.numeriUtiliLabels[0].isNotEmpty &&
+          config.numeriUtiliSalute.isNotEmpty)
+        (label: config.numeriUtiliLabels[0], entries: config.numeriUtiliSalute),
+      if (config.numeriUtiliLabels.length > 1 &&
+          config.numeriUtiliLabels[1].isNotEmpty &&
+          config.numeriUtiliAssistenza.isNotEmpty)
+        (
+          label: config.numeriUtiliLabels[1],
+          entries: config.numeriUtiliAssistenza
+        ),
+      if (config.numeriUtiliLabels.length > 2 &&
+          config.numeriUtiliLabels[2].isNotEmpty &&
+          config.numeriUtiliNoleggio.isNotEmpty)
+        (
+          label: config.numeriUtiliLabels[2],
+          entries: config.numeriUtiliNoleggio
+        ),
+    ];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Card(
@@ -23,7 +44,7 @@ class Contatti extends StatelessWidget {
           side: BorderSide(color: Colors.grey.shade200),
         ),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           childrenPadding: EdgeInsets.zero,
           shape: const Border(),
           collapsedShape: const Border(),
@@ -45,133 +66,91 @@ class Contatti extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-              child: Column(
-                children: [
-                  if (config.numeriUtiliLabels.isNotEmpty &&
-                      config.numeriUtiliLabels[0].isNotEmpty)
-                    _NumeriUtiliGroup(
-                      label: config.numeriUtiliLabels[0],
-                      color: config.numeriUtiliColori[0],
-                      entries: config.numeriUtiliSalute,
-                    ),
-                  if (config.numeriUtiliLabels.length > 1 &&
-                      config.numeriUtiliLabels[1].isNotEmpty)
-                    _NumeriUtiliGroup(
-                      label: config.numeriUtiliLabels[1],
-                      color: config.numeriUtiliColori[1],
-                      entries: config.numeriUtiliAssistenza,
-                    ),
-                  if (config.numeriUtiliLabels.length > 2 &&
-                      config.numeriUtiliLabels[2].isNotEmpty)
-                    _NumeriUtiliGroup(
-                      label: config.numeriUtiliLabels[2],
-                      color: config.numeriUtiliColori[2],
-                      entries: config.numeriUtiliNoleggio,
-                    ),
-                  _DoveMiTrovo(color: config.tertiaryColor),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Divider(height: 1, color: Colors.grey.shade100),
+
+                // ── Gruppi numeri utili ──────────────────────────────────
+                for (final group in groups) ...[
+                  _groupLabel(group.label),
+                  for (int i = 0; i < group.entries.length; i++) ...[
+                    _CallTile(entry: group.entries[i]),
+                    if (i < group.entries.length - 1)
+                      Divider(
+                          height: 1,
+                          indent: 64,
+                          endIndent: 16,
+                          color: Colors.grey.shade100),
+                  ],
                 ],
-              ),
+
+                // ── Dove mi Trovo ────────────────────────────────────────
+                if (groups.isNotEmpty)
+                  Divider(height: 1, color: Colors.grey.shade100),
+                _groupLabel('DOVE MI TROVO'),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Indirizzo(),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _groupLabel(String text) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+        child: Text(
+          text.toUpperCase(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade500,
+            letterSpacing: 1.2,
+          ),
+        ),
+      );
 }
 
-// ─── Gruppo numeri utili ─────────────────────────────────────────────────────
+// ─── Call tile ───────────────────────────────────────────────────────────────
 
-class _NumeriUtiliGroup extends StatelessWidget {
-  final String label;
-  final Color color;
-  final List<ContactEntry> entries;
-
-  const _NumeriUtiliGroup({
-    required this.label,
-    required this.color,
-    required this.entries,
-  });
+class _CallTile extends StatelessWidget {
+  final ContactEntry entry;
+  const _CallTile({required this.entry});
 
   @override
   Widget build(BuildContext context) {
-    return ExpansionTile(
-      tilePadding: const EdgeInsets.symmetric(horizontal: 8),
-      childrenPadding: EdgeInsets.zero,
-      shape: const Border(),
-      collapsedShape: const Border(),
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(Icons.phone_in_talk_rounded, color: color, size: 18),
-      ),
-      title: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-      ),
-      children: [
-        for (final entry in entries)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () =>
-                    constants.openUrl(Uri.parse('tel:${entry.number}')),
-                icon: const Icon(Icons.phone, size: 18),
-                label: Text(entry.label),
-                style: ButtonStyle(
-                  shape: WidgetStateProperty.all(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  backgroundColor: WidgetStateProperty.all(color),
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
-                  elevation: WidgetStateProperty.all(0),
-                ),
+    return InkWell(
+      onTap: () => constants.openUrl(Uri.parse('tel:${entry.number}')),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.phone_rounded,
+                  size: 17, color: Colors.grey.shade700),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                entry.label,
+                style: const TextStyle(fontSize: 14, color: Colors.black87),
               ),
             ),
-          ),
-      ],
-    );
-  }
-}
-
-// ─── Dove mi Trovo ───────────────────────────────────────────────────────────
-
-class _DoveMiTrovo extends StatelessWidget {
-  final Color color;
-  const _DoveMiTrovo({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return ExpansionTile(
-      tilePadding: const EdgeInsets.symmetric(horizontal: 8),
-      childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-      shape: const Border(),
-      collapsedShape: const Border(),
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(8),
+            Icon(Icons.chevron_right_rounded,
+                size: 18, color: Colors.grey.shade400),
+          ],
         ),
-        child: Icon(Icons.location_on_rounded, color: color, size: 18),
       ),
-      title: const Text(
-        'Dove mi Trovo',
-        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-      ),
-      children: [
-        Indirizzo(),
-      ],
     );
   }
 }

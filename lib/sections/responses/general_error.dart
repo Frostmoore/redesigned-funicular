@@ -1,7 +1,6 @@
-import 'package:Assidim/assets/constants.dart' as constants;
 import 'package:Assidim/core/providers/app_provider.dart';
+import 'package:Assidim/sections/responses/auth_feedback.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:provider/provider.dart';
 
 class GeneralError extends StatelessWidget {
@@ -9,18 +8,15 @@ class GeneralError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const HtmlWidget(
-          "<h2 style='text-align:center;font-weight:bold;'>ATTENZIONE!</h2>"
-          "<p style='text-align:center;'>Si è verificato un errore. Riprova più tardi.</p>",
-        ),
-        constants.SPACER_MEDIUM,
-        ElevatedButton(
-          style: constants.STILE_BOTTONE,
+    return AuthFeedback(
+      icon: Icons.cloud_off_rounded,
+      iconColor: Colors.red,
+      title: 'Si è verificato un errore',
+      body: 'Qualcosa è andato storto. Controlla la connessione e riprova più tardi.',
+      actions: [
+        AuthFeedbackButton(
+          label: 'Indietro',
           onPressed: context.read<AppProvider>().goToLogin,
-          child: const Text('INDIETRO'),
         ),
       ],
     );

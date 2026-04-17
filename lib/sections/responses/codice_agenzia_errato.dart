@@ -1,7 +1,6 @@
-import 'package:Assidim/assets/constants.dart' as constants;
 import 'package:Assidim/core/providers/app_provider.dart';
+import 'package:Assidim/sections/responses/auth_feedback.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:provider/provider.dart';
 
 class CodiceAgenziaErrato extends StatelessWidget {
@@ -9,20 +8,16 @@ class CodiceAgenziaErrato extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const HtmlWidget(
-          "<h2 style='text-align:center;font-weight:bold;'>ATTENZIONE!</h2>"
-          "<p style='text-align:center;'>Il Codice Agenzia che hai inserito non "
-          "risulta corretto.</p>"
-          "<p style='text-align:center;'>Contatta la tua Agenzia per riceverne uno valido.</p>",
-        ),
-        constants.SPACER_MEDIUM,
-        ElevatedButton(
-          style: constants.STILE_BOTTONE,
+    return AuthFeedback(
+      icon: Icons.domain_disabled_rounded,
+      iconColor: Colors.red,
+      title: 'Codice agenzia errato',
+      body: 'Il codice agenzia inserito non è valido. '
+          'Contatta la tua agenzia per ricevere il codice corretto.',
+      actions: [
+        AuthFeedbackButton(
+          label: 'Indietro',
           onPressed: context.read<AppProvider>().goToLogin,
-          child: const Text('INDIETRO'),
         ),
       ],
     );

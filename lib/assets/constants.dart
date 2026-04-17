@@ -6,25 +6,46 @@ import 'package:url_launcher/url_launcher.dart';
 //  Identificatori app — sostituiti dallo script white-label
 // ─────────────────────────────────────────────────────────────────────────────
 
-const String TITLE  = '!NOME_APP';
-const String APPID  = '!APP_ID';
-const String ID     = '!ID_APP';
-const String TOKEN  = '!TOKEN';
+// const String TITLE  = '!NOME_APP';
+// const String APPID  = '!APP_ID';
+// const String ID     = '!ID_APP';
+// const String TOKEN  = '!TOKEN';
+
+const String TITLE = 'stocazzo';
+const String APPID = 'com.gsv.assidim';
+const String ID = '6';
+const String TOKEN = 'GwAqon0pX';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Endpoint API
 // ─────────────────────────────────────────────────────────────────────────────
 
-const String PATH             = 'www.hybridandgogsv.it';
-const String ENDPOINT         = '/res/api.php';
-const String ENDPOINT_REG     = '/res/api/v1/reg.php';
-const String ENDPOINT_LOG     = '/res/api/v1/auth.php';
-const String ENDPOINT_PASS    = '/res/api/v1/pass.php';
-const String ENDPOINT_CONS    = '/res/api/v1/cons.php';
-const String ENDPOINT_PRIV    = '/res/api/v1/priv.php';
-const String ENDPOINT_NOTI    = '/res/api/v1/noti.php';
+const String PATH = 'www.hybridandgogsv.it';
+const String ENDPOINT = '/res/api.php';
+const String ENDPOINT_REG = '/res/api/v1/reg.php';
+const String ENDPOINT_LOG = '/res/api/v1/auth.php';
+const String ENDPOINT_PASS = '/res/api/v1/pass.php';
+const String ENDPOINT_CONS = '/res/api/v1/cons.php';
+const String ENDPOINT_PRIV = '/res/api/v1/priv.php';
+const String ENDPOINT_NOTI = '/res/api/v1/noti.php';
 const String ENDPOINT_SINGLENOT = '/res/api/v1/singlenot.php';
-const String ENDPOINT_READNOTI  = '/res/api/v1/readnoti.php';
+const String ENDPOINT_READNOTI = '/res/api/v1/readnoti.php';
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Endpoint API v2
+// ─────────────────────────────────────────────────────────────────────────────
+
+const String ENDPOINT_V2_CONFIG    = '/res/api/v2/agency.php';
+const String ENDPOINT_V2_LOGIN     = '/res/api/v2/auth/login.php';
+const String ENDPOINT_V2_REG       = '/res/api/v2/auth/register.php';
+const String ENDPOINT_V2_PASS      = '/res/api/v2/auth/password.php';
+const String ENDPOINT_V2_ME        = '/res/api/v2/user/me.php';
+const String ENDPOINT_V2_PRIVACY   = '/res/api/v2/user/privacy.php';
+const String ENDPOINT_V2_NOTI      = '/res/api/v2/user/notifications.php';
+const String ENDPOINT_V2_NOTI_GENE = '/res/api/v2/notifications.php';
+const String ENDPOINT_V2_SINISTRO  = '/res/api/v2/claims/sinistro.php';
+const String ENDPOINT_V2_PREVENTIVO = '/res/api/v2/claims/preventivo.php';
+const String ENDPOINT_V2_DOCUMENTO = '/res/api/v2/claims/documento.php';
 
 /// Base URL per le immagini servite dal CDN del backend.
 const String IMG_PATH = 'https://$PATH/res/';
@@ -35,25 +56,25 @@ const String IMG_PATH = 'https://$PATH/res/';
 
 const Color COLORE_PRINCIPALE = Color(0xffdf842c);
 const Color COLORE_SECONDARIO = Color(0xff2b346b);
-const Color COLORE_TERZIARIO  = Color(0xff2b346b);
+const Color COLORE_TERZIARIO = Color(0xff2b346b);
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Placeholder white-label (sostituiti dallo script di generazione)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const String TESTOCAI             = '!TESTO_CAI';
-const String LABEL_BOTTONE_CAI    = '!LABEL_CAI';
+const String TESTOCAI = '!TESTO_CAI';
+const String LABEL_BOTTONE_CAI = '!LABEL_CAI';
 const String TITOLO_FORM_DENUNCIA = '!TITOLO_DENUNCIA';
-final   Uri  CAI_LINK             = Uri.parse('!CAI_LINK');
+final Uri CAI_LINK = Uri.parse('!CAI_LINK');
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Testi statici UI
 // ─────────────────────────────────────────────────────────────────────────────
 
 const String SINISTRO_TESTO_BOTTONE = 'Denuncia un Sinistro!';
-const String CHIAMATA_RAPIDA_UNO    = 'Chiamata Rapida';
-const String CHIAMATA_RAPIDA_DUE    = 'Whatsapp';
-const String CHIAMATA_RAPIDA_TRE    = 'e-mail Rapida';
+const String CHIAMATA_RAPIDA_UNO = 'Chiamata Rapida';
+const String CHIAMATA_RAPIDA_DUE = 'Whatsapp';
+const String CHIAMATA_RAPIDA_TRE = 'e-mail Rapida';
 const String ERRORE =
     "Impossibile effettuare l'operazione. Contatta l'amministrazione.";
 
@@ -87,11 +108,19 @@ const String PRIVACY_4 =
 //  Asset statici (SVG / PNG locali)
 // ─────────────────────────────────────────────────────────────────────────────
 
-SvgPicture svgFacebook()  => SvgPicture.asset('lib/assets/facebook.svg',  width: 50);
-SvgPicture svgGoogle()    => SvgPicture.asset('lib/assets/google.svg',    width: 40);
-SvgPicture svgInstagram() => SvgPicture.asset('lib/assets/instagram.svg', width: 40);
-SvgPicture svgLinkedin()  => SvgPicture.asset('lib/assets/linkedin.svg',  width: 50);
-SvgPicture svgWhatsapp()  => SvgPicture.asset('lib/assets/whatsapp.svg');
+SvgPicture svgFacebook() =>
+    SvgPicture.asset('lib/assets/facebook.svg', width: 50);
+SvgPicture svgGoogle() => SvgPicture.asset('lib/assets/google.svg', width: 40);
+SvgPicture svgInstagram() =>
+    SvgPicture.asset('lib/assets/instagram.svg', width: 40);
+SvgPicture svgLinkedin() =>
+    SvgPicture.asset('lib/assets/linkedin.svg', width: 50);
+SvgPicture svgWhatsapp({Color? color}) => SvgPicture.asset(
+      'lib/assets/whatsapp.svg',
+      colorFilter: color != null
+          ? ColorFilter.mode(color, BlendMode.srcIn)
+          : null,
+    );
 
 Widget get IMAGE_WEBSITE => Image.asset('lib/assets/website.png', width: 40);
 const AssetImage IMAGE_BUILDING = AssetImage('lib/assets/agenzia.png');
@@ -101,16 +130,16 @@ const AssetImage IMAGE_BUILDING = AssetImage('lib/assets/agenzia.png');
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TextStyle EVIDENZA = TextStyle(fontWeight: FontWeight.bold, fontSize: 18);
-const TextStyle BOLD     = TextStyle(fontWeight: FontWeight.bold);
-const TextStyle H1       = TextStyle(fontWeight: FontWeight.bold, fontSize: 22);
+const TextStyle BOLD = TextStyle(fontWeight: FontWeight.bold);
+const TextStyle H1 = TextStyle(fontWeight: FontWeight.bold, fontSize: 22);
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Spaziatori
 // ─────────────────────────────────────────────────────────────────────────────
 
-const Widget SPACER         = SizedBox(height: 25);
+const Widget SPACER = SizedBox(height: 25);
 const Widget SPACER_MINIMAL = SizedBox(height: 5);
-const Widget SPACER_MEDIUM  = SizedBox(height: 10);
+const Widget SPACER_MEDIUM = SizedBox(height: 10);
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Stili bottoni — usano colori di fallback; i widget dinamici usano
@@ -118,12 +147,12 @@ const Widget SPACER_MEDIUM  = SizedBox(height: 10);
 // ─────────────────────────────────────────────────────────────────────────────
 
 ButtonStyle buttonStyle(Color background) => ButtonStyle(
-  shape: WidgetStateProperty.all(
-    RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-  ),
-  backgroundColor: WidgetStateProperty.all(background),
-  foregroundColor: WidgetStateProperty.all(Colors.white),
-);
+      shape: WidgetStateProperty.all(
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+      ),
+      backgroundColor: WidgetStateProperty.all(background),
+      foregroundColor: WidgetStateProperty.all(Colors.white),
+    );
 
 final ButtonStyle STILE_BOTTONE = buttonStyle(COLORE_TERZIARIO);
 final ButtonStyle STILE_BOTTONE_ROSSO = buttonStyle(Colors.red.shade400);

@@ -15,6 +15,7 @@ abstract class _Key {
   static const nome = 'nome';
   static const cognome = 'cognome';
   static const playerId = 'playerid';
+  static const jwtToken = 'jwt_token';
 
   // SharedPreferences
   static const isLoggedIn = 'isAlreadyLogged';
@@ -85,6 +86,7 @@ class AppStorage {
     if (playerId != null && playerId.isNotEmpty) {
       await _secure.write(key: _Key.playerId, value: playerId);
     }
+
     // Salva anche username nelle prefs per accesso rapido (non sensibile)
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_Key.username, user.username);
@@ -92,6 +94,15 @@ class AppStorage {
 
   Future<String?> readUsername() => _secure.read(key: _Key.username);
   Future<String?> readPlayerId() => _secure.read(key: _Key.playerId);
+
+  // ─── JWT token ────────────────────────────────────────────────────────────
+
+  Future<void> saveJwtToken(String token) =>
+      _secure.write(key: _Key.jwtToken, value: token);
+
+  Future<String?> getJwtToken() => _secure.read(key: _Key.jwtToken);
+
+  Future<void> clearJwtToken() => _secure.delete(key: _Key.jwtToken);
 
   // ─── Biometria ────────────────────────────────────────────────────────────
 

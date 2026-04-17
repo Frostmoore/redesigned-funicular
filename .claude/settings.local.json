@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter build *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Read(//c/Users/Pixel/AppData/Local/**)",
+      "Bash(flutter devices *)",
+      "Bash(flutter run *)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(flutter sdk-path *)",
+      "Bash(flutter --version)",
+      "Read(//d/Android/platform-tools/**)",
+      "Bash(find /d /c -name \"adb.exe\" -path \"*/platform-tools/*\")",
+      "Bash(/d/androidvd/platform-tools/adb.exe logcat *)",
+      "Bash(/d/androidvd/platform-tools/adb.exe install *)",
+      "Bash(/d/androidvd/platform-tools/adb.exe uninstall *)",
+      "Bash(/d/androidvd/platform-tools/adb.exe shell *)",
+      "Bash(\"/d/androidvd/platform-tools/adb.exe\" shell *)",
+      "Bash(cmd.exe /c '\"D:\\\\androidvd\\\\platform-tools\\\\adb.exe\" shell df /data')",
+      "Bash(cmd.exe /c 'D:\\\\androidvd\\\\platform-tools\\\\adb.exe shell \"df /data\"')",
+      "Read(//c/Users/Pixel/.claude/projects/d--coding-Flutter-Assidim/**)"
+    ]
+  }
+}

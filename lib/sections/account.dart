@@ -1,8 +1,10 @@
 import 'package:Assidim/assets/constants.dart' as constants;
+import 'package:Assidim/core/models/user_data.dart';
 import 'package:Assidim/core/providers/app_provider.dart';
 import 'package:Assidim/core/storage/app_storage.dart';
-import 'package:Assidim/sections/account/account_header.dart';
 import 'package:Assidim/sections/account/account_polizze.dart';
+import 'package:Assidim/sections/account/gestione_consensi.dart';
+import 'package:Assidim/sections/account/notifiche.dart';
 import 'package:Assidim/sections/login_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
@@ -26,24 +28,17 @@ class _AccountPageState extends State<AccountPage> {
     _initFuture = _init();
   }
 
-  // ─── Inizializzazione biometria e auto-login ────────────────────────────────
-
   Future<void> _init() async {
     final provider = context.read<AppProvider>();
     final storage = provider.storage;
-
-    // Se non loggato tramite auto-login del Provider, mostra login
     if (!provider.isAuthenticated) return;
 
     final bioPerm = await storage.getBiometricsPermission();
-
     if (bioPerm == null) {
-      // Prima volta: chiedi consenso biometria
       await _askBiometricsConsent(storage);
     } else if (bioPerm == true) {
       final bioUsed = await storage.hasBiometricsBeenUsed();
       if (!bioUsed) {
-        // Ha dato consenso ma non ha ancora usato la biometria
         final success = await _authenticate();
         if (success) {
           await storage.setBiometricsUsed();
@@ -51,12 +46,10 @@ class _AccountPageState extends State<AccountPage> {
           await provider.logout();
         }
       } else {
-        // Già autenticato con biometria in precedenza: richiedi di nuovo
         final success = await _authenticate();
         if (!success) await provider.logout();
       }
     }
-    // bioPerm == false → nessuna biometria, procedi normalmente
   }
 
   Future<bool> _authenticate() async {
@@ -90,27 +83,26 @@ class _AccountPageState extends State<AccountPage> {
             'verranno <strong>mai trasmessi</strong> fuori dal tuo dispositivo.</p>',
           ),
           actions: [
-            ElevatedButton(
-              style: constants.STILE_BOTTONE,
-              onPressed: () async {
-                await storage.setBiometricsPermission(true);
-                if (!ctx.mounted) return;
-                Navigator.of(ctx).pop();
-                final ok = await _authenticate();
-                if (ok) {
-                  await storage.setBiometricsUsed();
-                }
-              },
-              child: const Text('Sì, Acconsento'),
-            ),
-            ElevatedButton(
-              style: constants.STILE_BOTTONE_ROSSO,
+            OutlinedButton(
               onPressed: () async {
                 await storage.setBiometricsPermission(false);
                 if (!ctx.mounted) return;
                 Navigator.of(ctx).pop();
               },
-              child: const Text('No, non mostrare più'),
+              child: const Text('No'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF1A2A4A),
+              ),
+              onPressed: () async {
+                await storage.setBiometricsPermission(true);
+                if (!ctx.mounted) return;
+                Navigator.of(ctx).pop();
+                final ok = await _authenticate();
+                if (ok) await storage.setBiometricsUsed();
+              },
+              child: const Text('Sì, acconsento'),
             ),
           ],
         ),
@@ -124,45 +116,156 @@ class _AccountPageState extends State<AccountPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          SizedBox(
-            height: 200,
-            child: Image.asset('lib/assets/polizze_header.jpg', fit: BoxFit.fitWidth),
-          ),
-          FutureBuilder<void>(
-            future: _initFuture,
-            builder: (context, snap) {
-              if (snap.connectionState != ConnectionState.done) {
-                return const Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(
-                    child: CircularProgressIndicator(color: constants.COLORE_PRINCIPALE),
+    return ColoredBox(
+      color: const Color(0xFFF5F6F8),
+      child: FutureBuilder<void>(
+        future: _initFuture,
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: CircularProgressIndicator(
+                    color: constants.COLORE_PRINCIPALE),
+              ),
+            );
+          }
+
+          final user = provider.currentUser;
+          if (user == null) return const LoginForm();
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _UserCard(user: user),
+                const SizedBox(height: 10),
+                const Notifiche(),
+                _sectionLabel('LE MIE POLIZZE'),
+                const AccountPolizze(),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.read<AppProvider>().logout(),
+                    icon: const Icon(Icons.logout_rounded, size: 18),
+                    label: const Text('Esci dall\'account'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red.shade600,
+                      side: BorderSide(color: Colors.red.shade200),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
                   ),
-                );
-              }
-
-              final user = provider.currentUser;
-              if (user == null) {
-                return const LoginForm();
-              }
-
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    const AccountHeader(),
-                    constants.SPACER,
-                    const AccountPolizze(),
-                    constants.SPACER,
-                  ],
                 ),
-              );
-            },
-          ),
-        ],
+              ],
+            ),
+          );
+        },
       ),
     );
   }
+
+  Widget _sectionLabel(String text) => Padding(
+        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade500,
+            letterSpacing: 1.4,
+          ),
+        ),
+      );
+}
+
+// ─── User card ───────────────────────────────────────────────────────────────
+
+class _UserCard extends StatelessWidget {
+  final UserData user;
+  const _UserCard({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = _initials(user.nome, user.cognome);
+
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            _avatar(initials),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${user.nome} ${user.cognome}'.trim().isNotEmpty
+                        ? '${user.nome} ${user.cognome}'.trim()
+                        : user.username,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 17),
+                  ),
+                  if (user.email.isNotEmpty)
+                    Text(
+                      user.email,
+                      style: TextStyle(
+                          fontSize: 13, color: Colors.grey.shade500),
+                    ),
+                  Text(
+                    '@${user.username}',
+                    style: TextStyle(
+                        fontSize: 12, color: Colors.grey.shade400),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.settings_rounded,
+                  color: Colors.grey.shade400, size: 22),
+              tooltip: 'Impostazioni',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (_) => const GestioneConsensi()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _initials(String nome, String cognome) {
+    final n = nome.isNotEmpty ? nome[0].toUpperCase() : '';
+    final c = cognome.isNotEmpty ? cognome[0].toUpperCase() : '';
+    final combined = '$n$c';
+    return combined.isNotEmpty ? combined : '?';
+  }
+
+  Widget _avatar(String initials) => Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A2A4A),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          initials,
+          style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18),
+        ),
+      );
 }

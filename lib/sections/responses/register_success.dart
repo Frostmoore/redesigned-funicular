@@ -1,7 +1,6 @@
-import 'package:Assidim/assets/constants.dart' as constants;
 import 'package:Assidim/core/providers/app_provider.dart';
+import 'package:Assidim/sections/responses/auth_feedback.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:provider/provider.dart';
 
 class RegisterSuccess extends StatelessWidget {
@@ -9,18 +8,16 @@ class RegisterSuccess extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const HtmlWidget(
-          "<h2 style='text-align:center;font-weight:bold;'>"
-          "Complimenti! Ti sei registrato con successo!</h2>",
-        ),
-        constants.SPACER_MEDIUM,
-        ElevatedButton(
-          style: constants.STILE_BOTTONE,
+    return AuthFeedback(
+      icon: Icons.check_circle_rounded,
+      iconColor: Colors.green,
+      title: 'Registrazione completata!',
+      body: 'Il tuo account è stato creato con successo. '
+          'Controlla la tua email per attivarlo, poi accedi.',
+      actions: [
+        AuthFeedbackButton(
+          label: 'Accedi',
           onPressed: context.read<AppProvider>().goToLogin,
-          child: const Text('ACCEDI!'),
         ),
       ],
     );

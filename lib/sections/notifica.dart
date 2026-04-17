@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:Assidim/assets/constants.dart' as constants;
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-// IMPORTA IL NOTIFIER DA main.dart
 import 'package:Assidim/core/providers/app_provider.dart';
+import 'package:Assidim/core/services/api_service.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Notifica extends StatefulWidget {
   const Notifica({super.key});
@@ -18,9 +16,9 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
   List<Map<String, dynamic>> nonViste = [];
   Set<String> viste = {};
   bool loading = false;
-  bool _isLoading = false; // FLAG per evitare richieste parallele
+  bool _isLoading = false;
   int currentPage = 0;
-  int? _cardDismissedIndex; // per animazione eliminazione
+  int? _cardDismissedIndex;
   late AppProvider _provider;
 
   @override
@@ -38,64 +36,50 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
   }
 
   Future<void> _caricaTutto() async {
-    if (_isLoading) {
-      print('[NOTIFICA] Skip: chiamata già in corso!');
-      return;
-    }
+    if (_isLoading) return;
     _isLoading = true;
     setState(() => loading = true);
 
     final prefs = await SharedPreferences.getInstance();
     viste = prefs.getStringList('notifiche_viste')?.toSet() ?? {};
-    print('[NOTIFICA] Notifiche già viste: $viste');
 
     final url = Uri.https(
       constants.PATH,
-      'res/api/v1/noti_gene.php',
-      {'agenziaid': constants.ID.toString()},
+      constants.ENDPOINT_V2_NOTI_GENE,
+      {'agency_id': constants.ID},
     );
-    print('[NOTIFICA] Chiamata API: $url');
 
     try {
-      final response = await http.get(url);
+      final list = await _provider.apiService.getV2List(url);
 
-      print('[NOTIFICA] BODY ricevuto dal server:');
-      print('<<<INIZIO BODY>>>\n${response.body}\n<<<FINE BODY>>>');
+      final oggi = DateTime.now();
+      final filtrate = <Map<String, dynamic>>[];
 
-      if (response.statusCode == 200) {
-        final List dati = json.decode(response.body);
-        print('[NOTIFICA] Ricevute ${dati.length} notifiche dal server');
-        List<Map<String, dynamic>> filtrate = [];
-        for (final n in dati) {
-          final id = n['id'].toString();
-          final scadenza = n['notifica_scadenza'] ?? '';
-          final oggi = DateTime.now();
-          bool isScaduta = false;
-          if (scadenza.isNotEmpty) {
-            try {
-              final dataScad = DateTime.tryParse(scadenza);
-              isScaduta = dataScad != null && dataScad.isBefore(oggi);
-            } catch (_) {
-              print('[NOTIFICA] Errore nel parsing data: $scadenza');
-            }
-          }
-          if (!viste.contains(id) && !isScaduta) {
-            filtrate.add(Map<String, dynamic>.from(n));
-          }
+      for (final n in list.cast<Map<String, dynamic>>()) {
+        final id = n['id']?.toString() ?? '';
+        final scadenza = n['scadenza']?.toString() ?? '';
+        bool isScaduta = false;
+        if (scadenza.isNotEmpty) {
+          final dataScad = DateTime.tryParse(scadenza);
+          isScaduta = dataScad != null && dataScad.isBefore(oggi);
         }
+        if (!viste.contains(id) && !isScaduta) {
+          filtrate.add(n);
+        }
+      }
+
+      if (mounted) {
         setState(() {
           nonViste = filtrate;
           loading = false;
         });
-        print(
-            '[NOTIFICA] Notifiche NON viste e NON scadute: ${nonViste.map((e) => e['id']).toList()}');
-      } else {
-        setState(() => loading = false);
-        print('[NOTIFICA] Errore HTTP ${response.statusCode}');
       }
+    } on ApiException catch (e) {
+      debugPrint('[NOTIFICA] Errore: $e');
+      if (mounted) setState(() => loading = false);
     } catch (e) {
-      setState(() => loading = false);
-      print('[NOTIFICA] Errore: $e');
+      debugPrint('[NOTIFICA] Errore: $e');
+      if (mounted) setState(() => loading = false);
     }
     _isLoading = false;
   }
@@ -104,19 +88,18 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
     final prefs = await SharedPreferences.getInstance();
     viste.add(id);
     await prefs.setStringList('notifiche_viste', viste.toList());
-    print('[NOTIFICA] Segnata come vista: $id');
     setState(() {
-      nonViste.removeWhere((n) => n['id'].toString() == id);
-      // Aggiorna currentPage per evitare errori di index!
+      nonViste.removeWhere((n) => n['id']?.toString() == id);
       if (currentPage >= nonViste.length) currentPage = nonViste.length - 1;
     });
   }
 
-  Widget _notificaCard(Map notifica, VoidCallback onClose) {
-    final notifica_titolo = notifica['notifica_titolo'] ?? '';
-    final notifica_testo = notifica['notifica_testo'] ?? '';
-    final notifica_link = notifica['notifica_link'] ?? '';
-    final notifica_immagine = notifica['notifica_immagine'];
+  Widget _notificaCard(Map<String, dynamic> notifica, VoidCallback onClose) {
+    // v2 field names
+    final titolo = notifica['titolo'] ?? '';
+    final testo = notifica['testo'] ?? '';
+    final link = notifica['link'] ?? '';
+    final immagine = notifica['immagine'];
 
     final dynamic coloriRaw = notifica['colori'];
     List<String> colori;
@@ -133,7 +116,7 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
       btnColor = const Color(0xff0e70b7);
     }
 
-    if (notifica_testo.trim().isEmpty) return const SizedBox.shrink();
+    if (testo.trim().isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -146,34 +129,29 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
               ],
-              border: Border.all(
-                color: Colors.grey.shade300,
-                width: 1,
-              ),
+              border: Border.all(color: Colors.grey.shade300),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (notifica_immagine != null &&
-                    notifica_immagine.toString().isNotEmpty)
+                if (immagine != null && immagine.toString().isNotEmpty)
                   ClipRRect(
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(12),
                       topRight: Radius.circular(12),
                     ),
                     child: Image.network(
-                      notifica_immagine,
+                      immagine.toString(),
                       width: double.infinity,
                       fit: BoxFit.cover,
                       height: 180,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const SizedBox(),
+                      errorBuilder: (_, __, ___) => const SizedBox(),
                     ),
                   ),
                 Padding(
@@ -181,7 +159,7 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
                   child: Column(
                     children: [
                       Text(
-                        notifica_titolo,
+                        titolo,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 20,
@@ -191,7 +169,7 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        notifica_testo,
+                        testo,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 16,
@@ -199,7 +177,7 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
                           color: Colors.black54,
                         ),
                       ),
-                      if (notifica_link != '')
+                      if (link.toString().isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 15),
                           child: ElevatedButton(
@@ -211,12 +189,10 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
+                                  horizontal: 20, vertical: 12),
                             ),
                             onPressed: () =>
-                                constants.openUrl(Uri.parse(notifica_link)),
+                                constants.openUrl(Uri.parse(link.toString())),
                             child: const Text('Scopri di più'),
                           ),
                         ),
@@ -256,32 +232,24 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
       );
     }
 
-    if (nonViste.isEmpty) {
-      print('[NOTIFICA] Nessuna notifica non vista!');
-      return const SizedBox.shrink();
-    }
+    if (nonViste.isEmpty) return const SizedBox.shrink();
 
     final pageController = PageController(
       viewportFraction: 0.92,
       initialPage: currentPage,
     );
 
-    // Altezza massima card: se supera, la card scrolla al suo interno!
     const maxCardHeight = 360.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          height: maxCardHeight + 24, // un po' di padding, pallini sotto
+          height: maxCardHeight + 24,
           child: PageView.builder(
             controller: pageController,
             itemCount: nonViste.length,
-            onPageChanged: (idx) {
-              setState(() {
-                currentPage = idx;
-              });
-            },
+            onPageChanged: (idx) => setState(() => currentPage = idx),
             itemBuilder: (context, idx) {
               final notifica = nonViste[idx];
               final isBeingDismissed = _cardDismissedIndex == idx;
@@ -291,12 +259,11 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
                 child: GestureDetector(
                   onVerticalDragEnd: (details) async {
-                    // Swipe verso l'alto = elimina la notifica, animazione
                     if (details.primaryVelocity != null &&
                         details.primaryVelocity! < -200) {
                       setState(() => _cardDismissedIndex = idx);
                       await Future.delayed(const Duration(milliseconds: 220));
-                      _segnaVista(notifica['id'].toString());
+                      _segnaVista(notifica['id']?.toString() ?? '');
                       setState(() => _cardDismissedIndex = null);
                     }
                   },
@@ -309,9 +276,8 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
                           ? const Offset(0, -0.13)
                           : Offset.zero,
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxHeight: maxCardHeight,
-                        ),
+                        constraints:
+                            const BoxConstraints(maxHeight: maxCardHeight),
                         child: Material(
                           color: Colors.transparent,
                           child: ClipRRect(
@@ -324,7 +290,8 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
                                   setState(() => _cardDismissedIndex = idx);
                                   await Future.delayed(
                                       const Duration(milliseconds: 220));
-                                  _segnaVista(notifica['id'].toString());
+                                  _segnaVista(
+                                      notifica['id']?.toString() ?? '');
                                   setState(() => _cardDismissedIndex = null);
                                 },
                               ),
@@ -340,7 +307,6 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
           ),
         ),
         const SizedBox(height: 10),
-        // Pallini indicatore
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(nonViste.length, (idx) {
@@ -351,7 +317,8 @@ class _NotificaState extends State<Notifica> with TickerProviderStateMixin {
               width: isActive ? 18 : 10,
               height: 10,
               decoration: BoxDecoration(
-                color: isActive ? const Color(0xff0e70b7) : Colors.grey[300],
+                color:
+                    isActive ? const Color(0xff0e70b7) : Colors.grey[300],
                 borderRadius: BorderRadius.circular(6),
               ),
             );

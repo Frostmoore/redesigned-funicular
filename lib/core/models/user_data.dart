@@ -38,7 +38,8 @@ class UserData {
       cognome: json['cognome']?.toString() ?? '',
       cf: json['cf']?.toString() ?? '',
       piva: json['piva']?.toString(),
-      playerId: playerId,
+      // v2: playerid is inside the user object; v1: passed separately
+      playerId: playerId ?? json['playerid']?.toString(),
       privacy2: json['privacy2']?.toString(),
       privacy3: json['privacy3']?.toString(),
       privacy4: json['privacy4']?.toString(),

@@ -2,7 +2,6 @@ import 'package:Assidim/assets/constants.dart' as constants;
 import 'package:Assidim/core/providers/app_provider.dart';
 import 'package:Assidim/sections/liberatoria.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -28,14 +27,14 @@ class _RegisterFormState extends State<RegisterForm> {
   double _passwordStrength = 0;
   String _passwordStrengthLabel = '';
   Color _passwordStrengthColor = Colors.red;
+  bool _passwordVisible = false;
 
   bool _isChecked1 = false;
   bool _isChecked2 = false;
   bool _isChecked3 = false;
   bool _isChecked4 = false;
   bool _isCheckedTutti = false;
-  bool _formError = false;
-  String _formErrorMessage = '';
+  String? _formError;
 
   @override
   void dispose() {
@@ -50,8 +49,7 @@ class _RegisterFormState extends State<RegisterForm> {
     super.dispose();
   }
 
-  void _toggleAll(bool? value) {
-    final v = value ?? false;
+  void _toggleAll(bool v) {
     setState(() {
       _isCheckedTutti = v;
       _isChecked1 = v;
@@ -62,33 +60,31 @@ class _RegisterFormState extends State<RegisterForm> {
   }
 
   void _updateTutti() {
-    setState(() {
-      _isCheckedTutti = _isChecked1 && _isChecked2 && _isChecked3 && _isChecked4;
-    });
+    setState(() => _isCheckedTutti =
+        _isChecked1 && _isChecked2 && _isChecked3 && _isChecked4);
   }
 
-  void _checkPasswordStrength(String password) {
-    double strength = 0;
-    if (password.length >= 8) strength += 0.25;
-    if (password.length >= 12) strength += 0.15;
-    if (password.contains(RegExp(r'[0-9]'))) strength += 0.2;
-    if (password.contains(RegExp(r'[A-Z]')) && password.contains(RegExp(r'[a-z]'))) {
-      strength += 0.2;
+  void _checkPasswordStrength(String pw) {
+    double s = 0;
+    if (pw.length >= 8) s += 0.25;
+    if (pw.length >= 12) s += 0.15;
+    if (pw.contains(RegExp(r'[0-9]'))) s += 0.2;
+    if (pw.contains(RegExp(r'[A-Z]')) && pw.contains(RegExp(r'[a-z]'))) {
+      s += 0.2;
     }
-    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) strength += 0.2;
-
+    if (pw.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) s += 0.2;
     setState(() {
-      _passwordStrength = strength;
-      if (password.isEmpty) {
+      _passwordStrength = s;
+      if (pw.isEmpty) {
         _passwordStrengthLabel = '';
         _passwordStrengthColor = Colors.transparent;
-      } else if (strength < 0.4) {
+      } else if (s < 0.4) {
         _passwordStrengthLabel = 'Debole';
         _passwordStrengthColor = Colors.red;
-      } else if (strength < 0.7) {
+      } else if (s < 0.7) {
         _passwordStrengthLabel = 'Media';
         _passwordStrengthColor = Colors.orange;
-      } else if (strength < 1) {
+      } else if (s < 1) {
         _passwordStrengthLabel = 'Forte';
         _passwordStrengthColor = Colors.lightGreen;
       } else {
@@ -112,7 +108,6 @@ class _RegisterFormState extends State<RegisterForm> {
     final dataNascitaStr = _dataDiNascita != null
         ? DateFormat('yyyy-MM-dd HH:mm:ss').format(_dataDiNascita!)
         : null;
-
     await context.read<AppProvider>().register(
           username: _username.text.trim(),
           password: _password.text,
@@ -129,296 +124,36 @@ class _RegisterFormState extends State<RegisterForm> {
         );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final config = context.read<AppProvider>().config!;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          constants.SPACER,
-          const Center(
-            child: Text(
-              'REGISTRAZIONE UTENTE',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const Center(
-            child: Text(
-              "Compila il form e accetta l'informativa sulla privacy per avere "
-              "accesso alle funzionalità avanzate dell'App.",
-              textAlign: TextAlign.center,
-            ),
-          ),
-          constants.SPACER,
-          Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                _textField(_username, 'Username'),
-                constants.SPACER_MEDIUM,
-                // Password + strength meter
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: _password,
-                      obscureText: true,
-                      enableSuggestions: false,
-                      autocorrect: false,
-                      decoration: _inputDeco('Password'),
-                      onChanged: _checkPasswordStrength,
-                      validator: (v) {
-                        if (v == null || v.isEmpty) {
-                          return 'Per proseguire, compila questo campo.';
-                        }
-                        if (v.length < 8) return 'Almeno 8 caratteri.';
-                        if (_passwordStrength < 0.7) return 'La password è troppo debole!';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    LinearProgressIndicator(
-                      minHeight: 8,
-                      value: _passwordStrength,
-                      backgroundColor: Colors.grey.shade300,
-                      color: _passwordStrengthColor,
-                    ),
-                    const SizedBox(height: 4),
-                    if (_passwordStrengthLabel.isNotEmpty)
-                      Text(
-                        'Forza password: $_passwordStrengthLabel',
-                        style: TextStyle(
-                          color: _passwordStrengthColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                  ],
-                ),
-                constants.SPACER_MEDIUM,
-                TextFormField(
-                  controller: _repeatPassword,
-                  obscureText: true,
-                  enableSuggestions: false,
-                  autocorrect: false,
-                  decoration: _inputDeco('Ripeti la Password'),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Per proseguire, compila questo campo.';
-                    if (v != _password.text) return 'Le Password non combaciano';
-                    return null;
-                  },
-                ),
-                constants.SPACER_MEDIUM,
-                TextFormField(
-                  controller: _email,
-                  decoration: _inputDeco('Email'),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Per proseguire, compila questo campo.';
-                    final re = RegExp(
-                      r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$",
-                    );
-                    if (!re.hasMatch(v)) return 'Inserisci un indirizzo e-mail valido.';
-                    return null;
-                  },
-                ),
-                constants.SPACER_MEDIUM,
-                TextFormField(
-                  controller: _telefono,
-                  keyboardType: TextInputType.phone,
-                  decoration: _inputDeco('Telefono Cellulare'),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Per proseguire, compila questo campo.';
-                    if (!RegExp(r'^[0-9]{7,15}$').hasMatch(v)) {
-                      return 'Numero non valido (solo cifre, minimo 7).';
-                    }
-                    return null;
-                  },
-                ),
-                constants.SPACER_MEDIUM,
-                _textField(_nome, 'Nome'),
-                constants.SPACER_MEDIUM,
-                _textField(_cognome, 'Cognome'),
-                constants.SPACER_MEDIUM,
-                TextFormField(
-                  controller: _cf,
-                  decoration: _inputDeco('Codice Fiscale'),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Per proseguire, compila questo campo.';
-                    final re = RegExp(
-                      r"^(?:[A-Z][AEIOU][AEIOUX]|[AEIOU]X{2}|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}(?:[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[15MR][\dLMNP-V]|[26NS][0-8LMNP-U])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM]|[AC-EHLMPR-T][26NS][9V])|(?:[02468LNQSU][048LQU]|[13579MPRTV][26NS])B[26NS][9V])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]",
-                      caseSensitive: false,
-                    );
-                    if (!re.hasMatch(v)) return 'Inserisci un Codice Fiscale valido.';
-                    return null;
-                  },
-                ),
-                constants.SPACER_MEDIUM,
-                // Data di nascita (read-only, apre date picker)
-                TextFormField(
-                  controller: TextEditingController(
-                    text: _dataDiNascita != null
-                        ? DateFormat('dd/MM/yyyy').format(_dataDiNascita!)
-                        : 'Non Selezionata',
-                  ),
-                  readOnly: true,
-                  decoration: _inputDeco('Data di Nascita'),
-                  onTap: () => _selectDate(context),
-                  validator: (v) => (v == null || v == 'Non Selezionata')
-                      ? 'Per proseguire, compila questo campo.'
-                      : null,
-                ),
-                constants.SPACER,
-                constants.SPACER_MEDIUM,
-                // Privacy
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Informativa Privacy',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 21),
-                      ),
-                      constants.SPACER_MEDIUM,
-                      Ink(
-                        child: InkWell(
-                          onTap: () => _showPrivacy(context),
-                          child: const HtmlWidget(
-                            "<p style='text-align:center;'>Prima di registrarti, "
-                            "assicurati di aver letto la nostra "
-                            "<span style='text-decoration:underline;color:blue;'>"
-                            "Informativa Privacy</span> e di assegnare i tuoi consensi.</p>",
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                constants.SPACER,
-                // Seleziona tutti
-                _PrivacyCheckRow(
-                  value: _isCheckedTutti,
-                  color: config.primaryColor,
-                  label: 'Acconsento ad ogni trattamento dei miei dati come indicato di seguito.',
-                  labelColor: Colors.white,
-                  onChanged: _toggleAll,
-                ),
-                constants.SPACER,
-                _PrivacyCheckRow(
-                  value: _isChecked1,
-                  color: null,
-                  label: '* Acconsento al trattamento dei dati particolari per le finalità indicate al punto 1 dell\'informativa.',
-                  onChanged: (v) => setState(() {
-                    _isChecked1 = v ?? false;
-                    _updateTutti();
-                  }),
-                ),
-                constants.SPACER,
-                _PrivacyCheckRow(
-                  value: _isChecked2,
-                  color: null,
-                  label: constants.PRIVACY_2,
-                  onChanged: (v) => setState(() {
-                    _isChecked2 = v ?? false;
-                    _updateTutti();
-                  }),
-                ),
-                constants.SPACER,
-                _PrivacyCheckRow(
-                  value: _isChecked3,
-                  color: null,
-                  label: constants.PRIVACY_3,
-                  onChanged: (v) => setState(() {
-                    _isChecked3 = v ?? false;
-                    _updateTutti();
-                  }),
-                ),
-                constants.SPACER,
-                _PrivacyCheckRow(
-                  value: _isChecked4,
-                  color: null,
-                  label: constants.PRIVACY_4,
-                  onChanged: (v) => setState(() {
-                    _isChecked4 = v ?? false;
-                    _updateTutti();
-                  }),
-                ),
-                constants.SPACER,
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: ElevatedButton(
-                    onPressed: _onRegisterTap,
-                    style: constants.STILE_BOTTONE,
-                    child: const Text(
-                      'REGISTRATI!',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                if (_formError)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      _formErrorMessage,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                constants.SPACER_MEDIUM,
-                const Text('Sei già registrato?'),
-                ElevatedButton(
-                  onPressed: context.read<AppProvider>().goToLogin,
-                  style: constants.STILE_BOTTONE,
-                  child: const Text('ACCEDI!', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _onRegisterTap() {
-    setState(() {
-      _formError = false;
-      _formErrorMessage = '';
-    });
+    setState(() => _formError = null);
     if (!_isChecked1) {
-      setState(() {
-        _formError = true;
-        _formErrorMessage =
-            'È obbligatorio acconsentire almeno al primo punto della liberatoria.';
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_formErrorMessage)),
-      );
+      final msg =
+          'È obbligatorio acconsentire almeno al primo punto della liberatoria.';
+      setState(() => _formError = msg);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
       return;
     }
     if (!_formKey.currentState!.validate()) {
-      setState(() {
-        _formError = true;
-        _formErrorMessage = 'Controlla tutti i campi, alcuni non sono validi o mancanti.';
-      });
+      setState(() => _formError =
+          'Controlla tutti i campi, alcuni non sono validi o mancanti.');
       return;
     }
     _sendData();
   }
 
   Future<void> _showPrivacy(BuildContext context) {
+    final config = context.read<AppProvider>().config!;
     return showDialog(
       context: context,
       builder: (ctx) => Theme(
-        data: Theme.of(ctx).copyWith(dialogBackgroundColor: Colors.white),
+        data:
+            Theme.of(ctx).copyWith(dialogBackgroundColor: Colors.white),
         child: AlertDialog(
           backgroundColor: Colors.white,
           surfaceTintColor: Colors.white,
           title: const Text('Informativa Privacy'),
-          content: const Liberatoria(),
+          content: Liberatoria(config: config),
           actions: [
             TextButton(
               style: constants.STILE_BOTTONE,
@@ -431,74 +166,518 @@ class _RegisterFormState extends State<RegisterForm> {
     );
   }
 
-  TextFormField _textField(TextEditingController ctrl, String label) {
-    return TextFormField(
-      controller: ctrl,
-      decoration: _inputDeco(label),
-      validator: (v) =>
-          (v == null || v.isEmpty) ? 'Per proseguire, compila questo campo.' : null,
+  // ─── Helpers ───────────────────────────────────────────────��───────────────
+
+  InputDecoration _inputDeco(String label, {IconData? icon}) =>
+      InputDecoration(
+        labelText: label,
+        prefixIcon: icon != null
+            ? Icon(icon, size: 18, color: Colors.grey.shade500)
+            : null,
+        filled: true,
+        fillColor: const Color(0xFFF5F6F8),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide:
+              const BorderSide(color: Color(0xFF1A2A4A), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide:
+              const BorderSide(color: Colors.red, width: 1.5),
+        ),
+      );
+
+  Widget _sectionLabel(String text) => Padding(
+        padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade500,
+            letterSpacing: 1.4,
+          ),
+        ),
+      );
+
+  Widget _card(Widget child) => Card(
+        elevation: 0,
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: child,
+        ),
+      );
+
+  // ─── Build ───────────────────────────────────────────────────────���─────────
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: const Color(0xFFF5F6F8),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header ──
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A2A4A),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Icon(Icons.person_add_rounded,
+                          color: Colors.white, size: 30),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Crea il tuo account',
+                      style: TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Compila tutti i campi per registrarti.',
+                      style: TextStyle(
+                          fontSize: 14, color: Colors.grey.shade500),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Credenziali ──
+              _sectionLabel('CREDENZIALI'),
+              _card(Column(
+                children: [
+                  TextFormField(
+                    controller: _username,
+                    decoration: _inputDeco('Username',
+                        icon: Icons.alternate_email_rounded),
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? 'Campo obbligatorio'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _password,
+                    obscureText: !_passwordVisible,
+                    enableSuggestions: false,
+                    autocorrect: false,
+                    decoration: _inputDeco('Password',
+                            icon: Icons.key_rounded)
+                        .copyWith(
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible
+                              ? Icons.visibility_rounded
+                              : Icons.visibility_off_rounded,
+                          color: Colors.grey.shade500,
+                          size: 18,
+                        ),
+                        onPressed: () => setState(
+                            () => _passwordVisible = !_passwordVisible),
+                      ),
+                    ),
+                    onChanged: _checkPasswordStrength,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Campo obbligatorio';
+                      if (v.length < 8) return 'Almeno 8 caratteri';
+                      if (_passwordStrength < 0.7) return 'Password troppo debole';
+                      return null;
+                    },
+                  ),
+                  if (_passwordStrengthLabel.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        minHeight: 6,
+                        value: _passwordStrength,
+                        backgroundColor: Colors.grey.shade200,
+                        color: _passwordStrengthColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'Forza: $_passwordStrengthLabel',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: _passwordStrengthColor,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _repeatPassword,
+                    obscureText: true,
+                    enableSuggestions: false,
+                    autocorrect: false,
+                    decoration: _inputDeco('Ripeti la Password',
+                        icon: Icons.key_rounded),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Campo obbligatorio';
+                      if (v != _password.text) {
+                        return 'Le password non coincidono';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              )),
+
+              // ── Dati personali ──
+              _sectionLabel('DATI PERSONALI'),
+              _card(Column(
+                children: [
+                  TextFormField(
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration:
+                        _inputDeco('Email', icon: Icons.email_rounded),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Campo obbligatorio';
+                      final re = RegExp(
+                          r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$");
+                      if (!re.hasMatch(v)) return 'Email non valida';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _telefono,
+                    keyboardType: TextInputType.phone,
+                    decoration: _inputDeco('Telefono',
+                        icon: Icons.phone_rounded),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Campo obbligatorio';
+                      if (!RegExp(r'^[0-9]{7,15}$').hasMatch(v)) {
+                        return 'Numero non valido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _nome,
+                    decoration:
+                        _inputDeco('Nome', icon: Icons.badge_rounded),
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? 'Campo obbligatorio'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _cognome,
+                    decoration: _inputDeco('Cognome',
+                        icon: Icons.badge_rounded),
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? 'Campo obbligatorio'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _cf,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: _inputDeco('Codice Fiscale',
+                        icon: Icons.fingerprint_rounded),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Campo obbligatorio';
+                      final re = RegExp(
+                        r"^(?:[A-Z][AEIOU][AEIOUX]|[AEIOU]X{2}|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}(?:[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[15MR][\dLMNP-V]|[26NS][0-8LMNP-U])|[DHPS][37PT][0L]|[ACELMRT][37PT][01LM]|[AC-EHLMPR-T][26NS][9V])|(?:[02468LNQSU][048LQU]|[13579MPRTV][26NS])B[26NS][9V])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]",
+                        caseSensitive: false,
+                      );
+                      if (!re.hasMatch(v)) {
+                        return 'Codice Fiscale non valido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: TextEditingController(
+                      text: _dataDiNascita != null
+                          ? DateFormat('dd/MM/yyyy')
+                              .format(_dataDiNascita!)
+                          : '',
+                    ),
+                    readOnly: true,
+                    onTap: () => _selectDate(context),
+                    decoration: _inputDeco('Data di Nascita',
+                        icon: Icons.cake_rounded),
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? 'Campo obbligatorio'
+                        : null,
+                  ),
+                ],
+              )),
+
+              // ── Privacy ──
+              _sectionLabel('PRIVACY'),
+              _card(Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showPrivacy(context),
+                      icon: const Icon(Icons.info_outline_rounded,
+                          size: 17),
+                      label: const Text('Leggi l\'Informativa Privacy'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey.shade700,
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 11),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Seleziona tutti
+                  _PrivacyRow(
+                    value: _isCheckedTutti,
+                    label: 'Acconsento a tutti i trattamenti',
+                    bold: true,
+                    highlight: true,
+                    onChanged: _toggleAll,
+                  ),
+                  const SizedBox(height: 8),
+                  _PrivacyRow(
+                    value: _isChecked1,
+                    label:
+                        '* Acconsento al trattamento dei dati particolari per le finalità indicate al punto 1 dell\'informativa.',
+                    onChanged: (v) {
+                      setState(() => _isChecked1 = v);
+                      _updateTutti();
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  _PrivacyRow(
+                    value: _isChecked2,
+                    label: constants.PRIVACY_2,
+                    onChanged: (v) {
+                      setState(() => _isChecked2 = v);
+                      _updateTutti();
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  _PrivacyRow(
+                    value: _isChecked3,
+                    label: constants.PRIVACY_3,
+                    onChanged: (v) {
+                      setState(() => _isChecked3 = v);
+                      _updateTutti();
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  _PrivacyRow(
+                    value: _isChecked4,
+                    label: constants.PRIVACY_4,
+                    onChanged: (v) {
+                      setState(() => _isChecked4 = v);
+                      _updateTutti();
+                    },
+                  ),
+                ],
+              )),
+
+              // ── Error ──
+              if (_formError != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline_rounded,
+                          color: Colors.red.shade600, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _formError!,
+                          style: TextStyle(
+                              color: Colors.red.shade700, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _onRegisterTap,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF1A2A4A),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Registrati',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15)),
+                ),
+              ),
+
+              // ── Già registrato ──
+              _sectionLabel('HAI GIÀ UN ACCOUNT?'),
+              Card(
+                elevation: 0,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Colors.grey.shade200),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Hai già un account?',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: Colors.black87),
+                      ),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed:
+                              context.read<AppProvider>().goToLogin,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF1A2A4A),
+                            side: const BorderSide(
+                                color: Color(0xFF1A2A4A)),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(10)),
+                          ),
+                          child: const Text('Accedi',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
-
-  InputDecoration _inputDeco(String label) => InputDecoration(
-    labelText: label,
-    labelStyle: const TextStyle(color: Colors.black87, fontSize: 17),
-    focusedBorder: const UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.purple),
-    ),
-    enabledBorder: const UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.grey, width: 1),
-    ),
-  );
 }
 
-// ─── Privacy checkbox row ─────────────────────────────────────────────────────
+// ─── Privacy row ───────────────────────────────���─────────────────────────────
 
-class _PrivacyCheckRow extends StatelessWidget {
+class _PrivacyRow extends StatelessWidget {
   final bool value;
-  final Color? color;
   final String label;
-  final Color? labelColor;
-  final ValueChanged<bool?> onChanged;
+  final bool bold;
+  final bool highlight;
+  final ValueChanged<bool> onChanged;
 
-  const _PrivacyCheckRow({
+  const _PrivacyRow({
     required this.value,
-    required this.color,
     required this.label,
     required this.onChanged,
-    this.labelColor,
+    this.bold = false,
+    this.highlight = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Checkbox(
-          value: value,
-          activeColor: constants.COLORE_TERZIARIO,
-          onChanged: onChanged,
+        SizedBox(
+          width: 24,
+          height: 24,
+          child: Checkbox(
+            value: value,
+            activeColor: const Color(0xFF1A2A4A),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            onChanged: (v) => onChanged(v ?? false),
+          ),
         ),
-        Flexible(
-          child: labelColor != null
-              ? HtmlWidget("<p style='color: #ffffff;'>$label</p>")
-              : Text(label),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight:
+                  bold ? FontWeight.w600 : FontWeight.normal,
+              color: highlight ? Colors.white : Colors.black87,
+            ),
+          ),
         ),
       ],
     );
 
-    if (color != null) {
-      return Ink(
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: InkWell(
-          onTap: () => onChanged(!value),
-          child: Padding(padding: const EdgeInsets.fromLTRB(0, 5, 16, 5), child: row),
+    if (highlight) {
+      return GestureDetector(
+        onTap: () => onChanged(!value),
+        child: Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A2A4A),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: row,
         ),
       );
     }
 
-    return InkWell(onTap: () => onChanged(!value), child: row);
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: row,
+    );
   }
 }

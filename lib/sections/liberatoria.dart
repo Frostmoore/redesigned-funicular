@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:Assidim/assets/constants.dart' as constants;
+import 'package:Assidim/core/models/app_config.dart';
 
 class Liberatoria extends StatefulWidget {
-  final data;
-  const Liberatoria({super.key, this.data});
+  final AppConfig config;
+  const Liberatoria({super.key, required this.config});
 
   @override
   State<Liberatoria> createState() => _LiberatoriaState();
@@ -13,12 +14,12 @@ class Liberatoria extends StatefulWidget {
 class _LiberatoriaState extends State<Liberatoria> {
   @override
   Widget build(BuildContext context) {
-    String nomeAgenzia = widget.data['nome_agenzia'];
-    List indirizzoAgenziaArray = widget.data['info_indirizzi_sedi'].split('|');
-    List emailAgenziaArray = widget.data['info_email_sedi'].split('|');
-    String emailAgenzia = emailAgenziaArray[0];
-    String indirizzoAgenzia = indirizzoAgenziaArray[0];
-    indirizzoAgenzia = indirizzoAgenzia.replaceAll('/n', ' ');
+    final c = widget.config;
+    String nomeAgenzia = c.nomeAgenzia;
+    String indirizzoAgenzia = c.sedi.isNotEmpty
+        ? c.sedi[0].indirizzo.replaceAll('/n', ' ')
+        : '';
+    String emailAgenzia = c.sedi.isNotEmpty ? c.sedi[0].email : '';
 
     String capitolo1 =
         "<p style='text-align:justify;'>Ai sensi degli artt. 13 e 14 del GDPR 679/2016 – Regolamento europeo sulla protezione dei dati personali e in relazione ai dati personali che La riguardano e che formeranno oggetto del trattamento, La informiamo che:<br>Qualora in intestazione siano riportati dati di una persona giuridica, i dati oggetto della presente saranno quelli riferiti alle persone fisiche operanti nella stessa, di cui <strong>$nomeAgenzia</strong>  verrà a conoscenza.<br><strong>$nomeAgenzia</strong> in qualità di Titolare del trattamento intende acquisire, anche verbalmente, direttamente o tramite terzi, o già detiene, alcuni Suoi dati, qualificati come personali, il cui trattamento viene effettuato nel rispetto dei diritti e delle libertà fondamentali, nonché della dignità dell’interessato, con particolare riferimento alla riservatezza, all’identità personale, al diritto ed alla protezione dei dati personali.<br>Saranno inoltre trattate anche categorie particolari di dati, che devono essere forniti da Lei in qualità di soggetto interessato o da terzi, ad esempio da contraenti di polizze collettive o individuali che La qualificano come assicurato, beneficiario, proprietario dei beni assicurati o danneggiato (come nel caso di polizze di responsabilità civile) oppure da banche dati che vengono consultate in fase pre assuntiva, assuntiva o liquidativa.<br>Ciò premesso, <strong>$nomeAgenzia</strong>  La informa riguardo le finalità e le modalità del trattamento dei dati personali raccolti e il loro ambito di comunicazione e diffusione, oltre alla natura del loro conferimento, premettendo che i trattamenti avvengono nel contesto delle analisi obbligatorie per legge o regolamento, dell’instaurazione ed esecuzione dei rapporti commerciali in essere o in divenire e dei rapporti consulenziali da Lei richiesti come previsti da leggi o regolamenti di settore.</p>";

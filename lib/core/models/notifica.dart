@@ -1,10 +1,9 @@
-/// Comunicazione in-app ricevuta dal backend.
+/// Comunicazione in-app ricevuta dal backend (v2).
 class Notifica {
   final String id;
   final String titolo;
   final String contenuto;
-  final List<String> destinatari;
-  final List<String> lettaDa;
+  final bool letta;
   final String dataora;
   final String? immagine;
   final String? link;
@@ -14,8 +13,7 @@ class Notifica {
     required this.id,
     required this.titolo,
     required this.contenuto,
-    required this.destinatari,
-    required this.lettaDa,
+    required this.letta,
     required this.dataora,
     this.immagine,
     this.link,
@@ -23,14 +21,12 @@ class Notifica {
   });
 
   factory Notifica.fromJson(Map<String, dynamic> json) {
-    final dest = json['destinatari']?.toString() ?? '';
-    final letta = json['letta_da']?.toString() ?? '';
     return Notifica(
       id: json['id']?.toString() ?? '',
       titolo: json['titolo']?.toString() ?? '',
-      contenuto: json['contenuto']?.toString() ?? '',
-      destinatari: dest.isEmpty ? [] : dest.split(','),
-      lettaDa: letta.isEmpty ? [] : letta.split(','),
+      // v2 uses 'testo' for body; fall back to 'contenuto' for compatibility
+      contenuto: json['testo']?.toString() ?? json['contenuto']?.toString() ?? '',
+      letta: json['letta'] == true || json['letta']?.toString() == '1',
       dataora: json['dataora']?.toString() ?? '',
       immagine: json['immagine']?.toString(),
       link: json['link']?.toString(),
@@ -38,8 +34,7 @@ class Notifica {
     );
   }
 
-  bool isUnreadBy(String username) =>
-      destinatari.contains(username) && !lettaDa.contains(username);
+  bool isUnreadBy(String username) => !letta;
 
-  bool isForUser(String username) => destinatari.contains(username);
+  bool isForUser(String username) => true;
 }
