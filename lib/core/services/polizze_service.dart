@@ -41,12 +41,14 @@ class PolizzeService {
     };
 
     // 1. Lookup credenziali
-    final urlLookup =
-        Uri.https(assiurl, 'assieasy/clienti/autenticazione/get_credenziali_utente');
-    final lookupData = await _api.postForm(urlLookup, fields: {
-      'username': user.username,
-      'codicefiscale': user.cf,
-    }, extraHeaders: headers);
+    final urlLookup = Uri.https(
+        assiurl, 'assieasy/clienti/autenticazione/get_credenziali_utente');
+    final lookupData = await _api.postForm(urlLookup,
+        fields: {
+          'username': user.username,
+          'codicefiscale': user.cf,
+        },
+        extraHeaders: headers);
 
     final passwordAe = lookupData['data']?['PASSWORD'] as String?;
     if (passwordAe == null || passwordAe.isEmpty) {
@@ -56,10 +58,12 @@ class PolizzeService {
     // 2. Login
     final urlLogin =
         Uri.https(assiurl, 'assieasy/clienti/autenticazione/login');
-    final loginData = await _api.postForm(urlLogin, fields: {
-      'username': user.username,
-      'password': passwordAe,
-    }, extraHeaders: headers);
+    final loginData = await _api.postForm(urlLogin,
+        fields: {
+          'username': user.username,
+          'password': passwordAe,
+        },
+        extraHeaders: headers);
 
     final tokenAe = loginData['data']?['TOKEN'] as String?;
     if (tokenAe == null || tokenAe.isEmpty) {
@@ -70,12 +74,17 @@ class PolizzeService {
 
     // 3. Polizze
     final urlPolizze = Uri.https(assiurl, 'assieasy/clienti/polizze/get');
-    final polizzeData = await _api.postForm(urlPolizze, fields: {
-      'ID_POLIZZA': '0',
-      'SOLO_VIVE': '1',
-      'sorts[1][column]': 'NUMERO_POLIZZA',
-      'sorts[1][order]': 'DESC',
-    }, extraHeaders: authedHeaders);
+    final polizzeData = await _api.postForm(urlPolizze,
+        fields: {
+          'ID_POLIZZA': '0',
+          'SOLO_VIVE': '1',
+          'sorts[1][column]': 'NUMERO_POLIZZA',
+          'sorts[1][order]': 'DESC',
+        },
+        extraHeaders: authedHeaders);
+
+    debugPrint(
+        '[Polizze] AssiEasy polizze response: ${jsonEncode(polizzeData)}');
 
     final rawPolizze = polizzeData['data'] as List<dynamic>?;
     if (rawPolizze == null || rawPolizze.isEmpty) {
@@ -84,9 +93,13 @@ class PolizzeService {
 
     // 4. Titoli (per DATA_EFFETTO_TITOLO)
     final urlTitoli = Uri.https(assiurl, 'assieasy/clienti/titoli/get');
-    final titoliData = await _api.postForm(urlTitoli, fields: {
-      'STATO_TITOLO': '1',
-    }, extraHeaders: authedHeaders);
+    final titoliData = await _api.postForm(urlTitoli,
+        fields: {
+          'STATO_TITOLO': '1',
+        },
+        extraHeaders: authedHeaders);
+
+    debugPrint('[Polizze] AssiEasy titoli response: ${jsonEncode(titoliData)}');
 
     final rawTitoli = titoliData['data'] as List<dynamic>? ?? [];
     final titoliById = <String, String?>{};
@@ -134,17 +147,17 @@ class PolizzeService {
       queryParams['partita_iva'] = user.piva!;
     }
 
-    final uri = Uri.https(config.jwturl!, '/webservice/gsvhomeinsurance/polizze', queryParams);
+    final uri = Uri.https(
+        config.jwturl!, '/webservice/gsvhomeinsurance/polizze', queryParams);
     final raw = await _api.getRaw(uri, headers: {
       'Authorization': 'Bearer $jwt',
       'Accept': 'application/json',
     });
 
+    debugPrint('[Polizze] JWT fallback response: ${jsonEncode(raw)}');
+
     final list = (raw as Map)['data'] as List<dynamic>? ?? [];
-    return list
-        .cast<Map<String, dynamic>>()
-        .map(Polizza.fromJson)
-        .toList();
+    return list.cast<Map<String, dynamic>>().map(Polizza.fromJson).toList();
   }
 
   String _buildJwt({
@@ -174,7 +187,9 @@ class PolizzeService {
     final encodedPayload = b64url(payload);
     final toSign = '$encodedHeader.$encodedPayload';
     final sig = base64UrlEncode(
-      Hmac(sha256, utf8.encode(chiavePrivata)).convert(utf8.encode(toSign)).bytes,
+      Hmac(sha256, utf8.encode(chiavePrivata))
+          .convert(utf8.encode(toSign))
+          .bytes,
     ).replaceAll('=', '');
 
     return '$toSign.$sig';
