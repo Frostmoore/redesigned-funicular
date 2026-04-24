@@ -362,7 +362,7 @@ class _AccountPolizzeState extends State<AccountPolizze> {
                       child: Text(
                         (p['TARGA'] != null &&
                                 p['TARGA'].toString().trim().isNotEmpty)
-                            ? 'Polizza ${p['DESC_RAMO']} - ${p['TARGA']}'
+                            ? 'Polizza ${p['TARGA'].toString().trim()}'
                             : 'Polizza ${p['DESC_RAMO']}',
                         style: const TextStyle(
                           fontSize: 15,
